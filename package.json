@@ -1,0 +1,36 @@
+{
+  "name": "new-meta-server",
+  "version": "1.0.0",
+  "description": "## server",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chachagogogo/new-meta-server.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chachagogogo/new-meta-server/issues"
+  },
+  "homepage": "https://github.com/chachagogogo/new-meta-server#readme",
+  "dependencies": {
+    "aws-sdk": "^2.875.0",
+    "axios": "^0.21.1",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "multer": "^1.4.2",
+    "mysql2": "^2.2.5",
+    "sequelize": "^6.6.2",
+    "sequelize-cli": "^6.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
