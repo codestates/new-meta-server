@@ -8,7 +8,8 @@ const API_KEY = process.env.API_KEY;
 /* 클라이언트에서 사용자 소환사명과 포지션을 request로 받은 경우 */
 module.exports = {
   summonerInfo: async (req, res) => {
-    const summonerId = await encodedURI(req.body.summonerName);
+    console.log(req.body);
+    const summonerId = await encodeURI(req.body.summonerName);
     return axios
       .get(
         `https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}?api_key=${API_KEY}`

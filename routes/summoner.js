@@ -3,7 +3,7 @@ const router = express.Router();
 const controller = require("../controllers/summoner");
 
 /* 소환사 기본 정보(검색에 필요한 암호화된 아이디) */
-router.get("/summonerInfo", controller.summonerInfo);
+router.post("/summonerInfo", controller.summonerInfo);
 
 /* 소환사 랭크 게임 티어 및 승률 정보 */
 router.get("/leagueInfo", controller.summonerLeagueInfo);
