@@ -3,18 +3,20 @@ const router = express.Router();
 const controller = require("../controllers/summoner");
 
 /* 소환사 기본 정보(검색에 필요한 암호화된 아이디) */
-router.post("/summonerInfo", controller.summonerInfo);
+router.post("/summonerinfo", controller.summonerInfo);
 
 /* 소환사 랭크 게임 티어 및 승률 정보 */
-router.get("/leagueInfo", controller.summonerLeagueInfo);
+router.post("/leagueinfo", controller.summonerLeagueInfo);
 
-/* 소환사 랭크 게임 매치 리스트 */
+// /* 소환사 랭크 게임 매치 리스트 */
 
-router.get("/matchList", controller.summonerMatchList);
+router.post("/matchlist", controller.summonerMatchList);
 
-router.post("/laneRatio", controller.summonerLaneRatio);
+router.post("/laneratio", controller.summonerLaneRatio);
 
 /* 소환사 랭크 게임 20경기의 participantId 데이터 (타임라인을 확인하기 위한 필터값으로 필요함)*/
+
+router.post("/recentchampions", controller.summonerRecentChampions);
 
 // router.get("/matchPlayerId", controller.matchPlayerId);
 

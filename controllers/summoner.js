@@ -1,6 +1,7 @@
 const express = require("express");
 const axios = require("axios");
 const dotenv = require("dotenv");
+const { response } = require("express");
 dotenv.config();
 const API_KEY = process.env.API_KEY;
 
@@ -9,25 +10,30 @@ const API_KEY = process.env.API_KEY;
 module.exports = {
   summonerInfo: async (req, res) => {
     console.log(req.body);
-    const summonerId = await encodeURI(req.body.summonerName);
+    const summonerName = encodeURI(req.body.summonerName);
     return axios
       .get(
-        `https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}?api_key=${API_KEY}`
+        `https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}?api_key=${API_KEY}`
       )
       .then((response) => {
-        res.json(response.data);
+        console.log(response);
+        res.send(response.data);
       })
       .catch((err) => res.status(404).send("Summoner Not Found"));
   },
 
   summonerLeagueInfo: (req, res) => {
     const encryptedSummonerId = req.body.id;
-    axios
+    return axios
       .get(
         `https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/${encryptedSummonerId}?api_key=${API_KEY}`
       )
       .then((response) => {
-        if (!response[0] || response[0].wins + response[0].losses < 20) {
+        console.log(response.data);
+        if (
+          !response.data[0] ||
+          response.data[0].wins + response.data[0].losses < 20
+        ) {
           res.status(400).send("Not enough Data to analyze");
         } else {
           res.status(200).json(response.data);
@@ -46,113 +52,57 @@ module.exports = {
       });
   },
 
-  summonerLaneRatio: async (req, res) => {
-    try {
-      // console.log(req.body);
+  summonerLaneRatio: (req, res) => {
+    const encryptedAccountId = req.body.accountId;
+    console.log(encryptedAccountId);
 
-      const encryptedAccountId = req.body.accountId;
-      console.log(encryptedAccountId);
-      /* const getMatches = axios.get(
-      `https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&api_key=${API_KEY}`
-    ); */
-      await axios
-        .get(
-          `https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&api_key=${API_KEY}`
-        )
-        .then((response) => {
-          const matchList = response.body.matches;
-          console.log(response.data);
-
-          for (let i = 0; i < matchList.length; i++) {
-            const laneCount = {
-              TOP: 0,
-              JUNGLE: 0,
-              MID: 0,
-              BOTTOM: 0,
-            };
-
-            if (matchList[i].lane === "TOP") {
-              laneCount.TOP += 1;
-            } else if (matchList[i].lane === "JUNGLE") {
-              laneCount.JUNGLE += 1;
-            } else if (matchList[i].lane === "MID") {
-              laneCount.MID += 1;
-            } else if (matchList[i].lane === "BOTTOM") {
-              laneCount.BOTTOM += 1;
-            } else {
-              return;
-            }
-            return laneCount;
+    return axios
+      .get(
+        `https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&endIndex=100&api_key=${API_KEY}`
+      )
+      .then((response) => {
+        const matchList = response.data.matches;
+        console.log(matchList.length);
+        let laneCount = {
+          TOP: 0,
+          JUNGLE: 0,
+          MID: 0,
+          AD_CARRY: 0,
+          SUPPORT: 0,
+        };
+        for (let i = 0; i < matchList.length; i++) {
+          if (matchList[i].lane === "TOP") {
+            laneCount.TOP += 1;
+          } else if (matchList[i].lane === "JUNGLE") {
+            laneCount.JUNGLE += 1;
+          } else if (matchList[i].lane === "MID") {
+            laneCount.MID += 1;
+          } else if (matchList[i].lane === "BOTTOM") {
+            laneCount.BOTTOM += 1;
+          } else if (matchList[i].lane === "NONE") {
+            laneCount.SUPPORT += 1;
           }
-          res.status(200).send("ok");
-        });
-    } catch (err) {
-      console.log(err);
-      res.status(400).send("err");
-    }
+        }
+        res.status(200).send(laneCount);
+      });
   },
 
   summonerRecentChampions: async (req, res) => {
-    const encryptedAccountId = req.body.accountId;
-    const getMatches = axios.get(
-      `https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?endIndex=20&api_key=${api_key}`
-    );
-    const championStats = async (matches) => {
-      const recentParticipant = [];
-      await Promise.all(
-        matches.map(async (match) => {
-          const { gameId } = match;
-          await axios
-            .get(
-              `https://kr.api.riotgames.com/lol/match/v4/matches/${gameId}?api_key=${api_key}`
-            )
-            .then((each) => {
-              const { participants, participantIdentities } = each.data;
-              const participantId = Object.values(participantIdentities).find(
-                (participant) =>
-                  participant.player.summonerName === req.body.summonerName
-              ).participantId;
-
-              recentParticipant.push(
-                participants.find(
-                  (participant) => participant.participantId === participantId
-                )
-              );
-            });
-        })
-      );
-
-      const resultObj = recentParticipant.reduce((obj, val) => {
-        if (obj[val.championId]) {
-          obj[val.championId].stats.kills =
-            obj[val.championId].stats.kills + val.stats.kills;
-          obj[val.championId].stats.deaths =
-            obj[val.championId].stats.deaths + val.stats.deaths;
-          obj[val.championId].stats.assists =
-            obj[val.championId].stats.assists + val.stats.assists;
-          obj[val.championId].stats.win =
-            obj[val.championId].stats.win + val.stats.win;
-        } else {
-          obj[val.championId] = val;
-          obj[val.championId].count = 1;
-          obj[val.championId].stats.win = obj[val.championId].stats.win ? 1 : 0;
-          obj[val.championId].victoryRate = Math.round(
-            (obj[val.championId].stats.win / obj[val.championId].count) * 100
-          );
-        }
-        return obj;
-      }, []);
-      return resultObj.filter((x) => x).sort((a, b) => b.count - a.count);
-    };
-
-    return getMatches.then(async (fetchMatch) => {
-      const { matches } = fetchMatch.data;
-      return Promise.all([championStats(matches)]).then(([championStats]) => {
-        console.log("@@@");
-        res.status(200).json(championStats);
-      });
-    });
+    /* getMatches로  */
+    try {
+      const accountId = req.body.accountId;
+      const summonerName = req.body.name;
+      const enCodeSummonerName = encodeURI(summonerName);
+      const getMatches = await axios
+        .get(
+          `https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${accountId}?endIndex=20&api_key=${API_KEY}&summonerName=${enCodeSummonerName}`
+        )
+        .then((response) => response.data);
+      const getMatchId = (matches) => {
+        matches.map((match) => {});
+      };
+    } catch (err) {
+      console.log(err);
+    }
   },
 };
-
-module.exports.MatchTimelineBy15m;
