@@ -1,3 +1,4 @@
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -7,23 +8,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const express = require("express");
+Object.defineProperty(exports, "__esModule", { value: true });
 const axios = require("axios");
 const dotenv = require("dotenv");
-const { response } = require("express");
 dotenv.config();
 const API_KEY = process.env.API_KEY;
 /* API Data */
 /* 클라이언트에서 사용자 소환사명과 포지션을 request로 받은 경우 */
 module.exports = {
-    summonerInfo: (req, res) => __awaiter(this, void 0, void 0, function* () {
+    summonerInfo: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         console.log(req.body);
         const summonerName = encodeURI(req.body.summonerName);
         return axios
             .get(`https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}?api_key=${API_KEY}`)
             .then((response) => {
-            console.log(response);
-            res.send(response.data);
+            res.status(200).json({
+                id: response.data.id,
+                accountId: response.data.accountId,
+                puuid: response.data.puuid,
+                name: response.data.name,
+            });
         })
             .catch((err) => res.status(404).send("Summoner Not Found"));
     }),
@@ -42,22 +46,12 @@ module.exports = {
             }
         });
     },
-    summonerMatchList: (req, res) => {
+    summonerLaneInfo: (req, res) => {
         const encryptedAccountId = req.body.accountId;
-        axios
-            .get(`https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&api_key=${API_KEY}`)
-            .then((response) => {
-            res.json(response.data);
-        });
-    },
-    summonerLaneRatio: (req, res) => {
-        const encryptedAccountId = req.body.accountId;
-        console.log(encryptedAccountId);
         return axios
             .get(`https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&endIndex=100&api_key=${API_KEY}`)
             .then((response) => {
             const matchList = response.data.matches;
-            console.log(matchList.length);
             let laneCount = {
                 TOP: 0,
                 JUNGLE: 0,
@@ -76,31 +70,87 @@ module.exports = {
                     laneCount.MID += 1;
                 }
                 else if (matchList[i].lane === "BOTTOM") {
-                    laneCount.BOTTOM += 1;
+                    laneCount.AD_CARRY += 1;
                 }
                 else if (matchList[i].lane === "NONE") {
                     laneCount.SUPPORT += 1;
                 }
             }
-            res.status(200).send(laneCount);
+            res.status(200).json(laneCount);
         });
     },
-    summonerRecentChampions: (req, res) => __awaiter(this, void 0, void 0, function* () {
+    /* 최근 플레이한 챔피언의  */
+    summonerMatchList: (req, res) => {
+        const encryptedAccountId = req.body.accountId;
+        axios
+            .get(`https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&api_key=${API_KEY}`)
+            .then((response) => {
+            res.json(response.data);
+        });
+    },
+    summonerRecentChampions: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         /* getMatches로  */
         try {
             const accountId = req.body.accountId;
             const summonerName = req.body.name;
-            const enCodeSummonerName = encodeURI(summonerName);
-            const getMatches = yield axios
-                .get(`https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${accountId}?endIndex=20&api_key=${API_KEY}&summonerName=${enCodeSummonerName}`)
-                .then((response) => response.data);
-            const getMatchId = (matches) => {
-                matches.map((match) => { });
-            };
+            const enCodedSummonerName = encodeURI(summonerName);
+            const getChampionStats = ({ gameId, champion }) => __awaiter(void 0, void 0, void 0, function* () {
+                const summonerPlayInfo = yield axios
+                    .get(`https://kr.api.riotgames.com/lol/match/v4/matches/${gameId}?api_key=${API_KEY}`)
+                    .then((response) => response.data)
+                    .then((matchInfo) => matchInfo.participants)
+                    .then((matchPlayerInfo) => matchPlayerInfo.filter((player) => {
+                    return player.championId === champion;
+                }));
+                let result = {
+                    gameId: gameId,
+                    champion: summonerPlayInfo[0].championId,
+                    stats: {
+                        participantId: summonerPlayInfo[0].stats.participantId,
+                        win: summonerPlayInfo[0].stats.win,
+                        kills: summonerPlayInfo[0].stats.kills,
+                        deaths: summonerPlayInfo[0].stats.deaths,
+                        assists: summonerPlayInfo[0].stats.assists,
+                        lane: summonerPlayInfo[0].timeline.lane,
+                    },
+                };
+                return result;
+            });
+            const getMatchIDChampion = yield axios
+                .get(`https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${accountId}?endIndex=10&api_key=${API_KEY}&summonerName=${enCodedSummonerName}`)
+                .then((response) => response.data.matches)
+                .then((matches) => {
+                let matchList = [];
+                matches.map((match) => {
+                    matchList.push({ gameId: match.gameId, champion: match.champion });
+                });
+                return matchList;
+            })
+                .then((matchList) => __awaiter(void 0, void 0, void 0, function* () {
+                // console.log("matchList", matchList);
+                let resultArray = [];
+                const callback = () => __awaiter(void 0, void 0, void 0, function* () {
+                    for (let el of matchList) {
+                        yield getChampionStats(el).then((result) => resultArray.push(result));
+                    }
+                    return resultArray;
+                });
+                return callback();
+            }));
+            res.status(200).json(getMatchIDChampion);
         }
         catch (err) {
             console.log(err);
         }
     }),
+    /* 15분까지의 타임라인 데이터  */
+    matchTimeline: (req, res) => {
+        const gameId = req.body.gameId;
+        axios
+            .get(`https://kr.api.riotgames.com/lol/match/v4/timelines/by-match/${gameId}?api_key=${API_KEY}`)
+            .then((response) => {
+            res.send(response.data.frames);
+        });
+    },
 };
 //# sourceMappingURL=summoner.js.map

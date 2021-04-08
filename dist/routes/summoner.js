@@ -7,11 +7,9 @@ router.post("/summonerinfo", controller.summonerInfo);
 router.post("/leagueinfo", controller.summonerLeagueInfo);
 // /* 소환사 랭크 게임 매치 리스트 */
 router.post("/matchlist", controller.summonerMatchList);
-router.post("/laneratio", controller.summonerLaneRatio);
-/* 소환사 랭크 게임 20경기의 participantId 데이터 (타임라인을 확인하기 위한 필터값으로 필요함)*/
+router.post("/laneinfo", controller.summonerLaneInfo);
 router.post("/recentchampions", controller.summonerRecentChampions);
-// router.get("/matchPlayerId", controller.matchPlayerId);
 /* 소환사의 최근 랭크 게임 20경기의 매치 타임라인 데이터 */
-// router.get("/matchTimeline", controller.matchTimeline);
+router.get("/matchtimeline", controller.matchTimeline);
 module.exports = router;
 //# sourceMappingURL=summoner.js.map
