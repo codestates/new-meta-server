@@ -1,7 +1,7 @@
-const express = require("express");
-const axios = require("axios");
-const dotenv = require("dotenv");
-const { response } = require("express");
+import express = require("express");
+import axios = require("axios");
+import dotenv = require("dotenv");
+import { response } from "express";
 dotenv.config();
 const API_KEY = process.env.API_KEY;
 

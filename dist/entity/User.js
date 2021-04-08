@@ -14,7 +14,14 @@ const typeorm_1 = require("typeorm");
 const Bookmark_1 = require("./Bookmark");
 const Post_1 = require("./Post");
 const Like_1 = require("./Like");
+const bcrypt = require("bcryptjs");
 let User = class User {
+    hashPassword() {
+        this.password = bcrypt.hashSync(this.password, 8);
+    }
+    checkPassword(hashedPassword) {
+        return bcrypt.compareSync(hashedPassword, this.password);
+    }
 };
 __decorate([
     typeorm_1.PrimaryGeneratedColumn(),
