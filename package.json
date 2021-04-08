@@ -1,38 +1,49 @@
 {
-  "name": "new-meta-server",
-  "version": "1.0.0",
-  "description": "## server",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/chachagogogo/new-meta-server.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/chachagogogo/new-meta-server/issues"
-  },
-  "homepage": "https://github.com/chachagogogo/new-meta-server#readme",
-  "dependencies": {
-    "aws-sdk": "^2.875.0",
-    "axios": "^0.21.1",
-    "cookie-parser": "^1.4.5",
-    "cors": "^2.8.5",
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "jsonwebtoken": "^8.5.1",
-    "multer": "^1.4.2",
-    "mysql2": "^2.2.5",
-    "sequelize": "^6.6.2",
-    "sequelize-cli": "^6.2.0"
-  },
-  "devDependencies": {
-    "morgan": "^1.10.0",
-    "nodemon": "^2.0.7"
-  }
+	"name": "new-meta-server",
+	"version": "1.0.0",
+	"description": "## server",
+	"main": "app.js",
+	"scripts": {
+		"start": "tsc && node dist/app.js",
+		"prod": "tsc && node dist/app.js",
+		"typeorm": "ts-node -r tsconfig-paths/register src/app.ts"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/chachagogogo/new-meta-server.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/chachagogogo/new-meta-server/issues"
+	},
+	"homepage": "https://github.com/chachagogogo/new-meta-server#readme",
+	"dependencies": {
+		"aws-sdk": "^2.875.0",
+		"axios": "^0.21.1",
+		"bcryptjs": "^2.4.3",
+		"cookie-parser": "^1.4.5",
+		"cors": "^2.8.5",
+		"dotenv": "^8.2.0",
+		"express": "^4.17.1",
+		"jsonwebtoken": "^8.5.1",
+		"multer": "^1.4.2",
+		"mysql": "^2.14.1",
+		"mysql2": "^2.2.5",
+		"reflect-metadata": "^0.1.10",
+		"sequelize": "^6.6.2",
+		"sequelize-cli": "^6.2.0",
+		"tsconfig-paths": "^3.9.0",
+		"typeorm": "0.2.32"
+	},
+	"devDependencies": {
+		"@types/body-parser": "^1.19.0",
+		"@types/express": "^4.17.11",
+		"@types/node": "^8.0.29",
+		"morgan": "^1.10.0",
+		"nodemon": "^2.0.7",
+		"ts-node": "3.3.0",
+		"typescript": "^4.2.3"
+	}
 }
