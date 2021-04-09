@@ -3,6 +3,7 @@ import "reflect-metadata";
 import { createConnection } from "typeorm";
 import * as express from "express";
 import * as bodyParser from "body-parser";
+import * as cookieParser from "cookie-parser";
 import * as cors from "cors";
 import * as morgan from "morgan";
 
@@ -16,6 +17,7 @@ createConnection()
 		// 기본 설정
 		const app = express();
 		app.use(bodyParser.json());
+		app.use(cookieParser());
 		app.use(morgan("dev"));
 
 		app.use(
