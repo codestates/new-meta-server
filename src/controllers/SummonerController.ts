@@ -49,7 +49,7 @@ class SummonerController {
     const encryptedAccountId = req.body.accountId;
     return axios
       .get(
-        `https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&endIndex=100&api_key=${API_KEY}`
+        `https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&api_key=${API_KEY}`
       )
       .then((response) => {
         const matchList = response.data.matches;
@@ -124,7 +124,7 @@ class SummonerController {
 
       const getMatchIDChampion = await axios
         .get(
-          `https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${accountId}?endIndex=10&api_key=${API_KEY}&summonerName=${enCodedSummonerName}`
+          `https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${accountId}?endIndex=20&api_key=${API_KEY}&summonerName=${enCodedSummonerName}`
         )
         .then((response) => response.data.matches)
         .then((matches) => {
@@ -162,7 +162,7 @@ class SummonerController {
    * events 배열에서는 type이  "CHAMPION_KILL",  "ELITE_MONSTER_KILL" 인 객체만 map
    */
 
-  static matchTimeline = (req: Request, res: Response) => {
+  static eventTimeline = (req: Request, res: Response) => {
     interface FrameData {
       timestamp: number;
       participants: object;
@@ -171,49 +171,153 @@ class SummonerController {
 
     interface EventData {
       type: string;
-      timestamp: string;
+      timestamp: number;
       monsterType?: string;
       killerId?: number;
       victimId?: number;
       assistingParticipantIds?: Array<number>;
     }
 
-    try {
-      let gameId = req.body[0].gameId;
-      let summonerParticipantId = req.body[0].stats.participantId;
+    interface matchInfo {
+      gameId: number;
+      champion: number;
+      stats: { participantId: number };
+    }
 
-      const getMatchTimeline = axios
-        .get(
-          `https://kr.api.riotgames.com/lol/match/v4/timelines/by-match/${gameId}?api_key=${API_KEY}`
-        )
-        .then((response) => {
-          const arr: FrameData[] = response.data.frames;
-          return arr;
-        })
-        .then((result: FrameData[]) => {
-          return result.filter((el) => {
-            return el.timestamp !== 0 && el.timestamp < 910000;
-          });
-        })
-        .then((output: FrameData[]) => {
-          let eventTimeline = output.map((el) => {
-            return el.events;
-          });
-          return eventTimeline;
-        })
-        .then((output: EventData[][]) => {
-          return output.filter((el: EventData[]) => {
-            return el.filter((el) => {
+    try {
+      const matchListArray: matchInfo[] = req.body;
+      let eventDataArray = [];
+      const getMatchTimeline = async (el: matchInfo) => {
+        const gameId = el.gameId;
+        const summonerParticipantId = el.stats.participantId;
+
+        const variable = await axios
+          .get(
+            `https://kr.api.riotgames.com/lol/match/v4/timelines/by-match/${gameId}?api_key=${API_KEY}`
+          )
+          .then((response) => {
+            const arr: FrameData[] = response.data.frames;
+            return arr.filter((el) => {
+              return el.timestamp !== 0 && el.timestamp < 910000;
+            });
+          })
+          .then((output: FrameData[]) => {
+            let eventTimeline = output.map((el) => {
+              return el.events;
+            });
+            return eventTimeline;
+          })
+          .then((output: EventData[][]) => {
+            let eventArray = [];
+            for (let el of output) {
+              for (let ele of el) {
+                eventArray.push(ele);
+              }
+            }
+            return eventArray;
+          })
+          .then((result: EventData[]) => {
+            return result.filter((el) => {
               return (
                 el.type === "CHAMPION_KILL" || el.type === "ELITE_MONSTER_KILL"
               );
             });
+          })
+          .then((result) => {
+            const callback = () => {
+              let summonerEventInfo = {
+                matchKills: 0,
+                matchAssists: 0,
+                matchDeaths: 0,
+                matchDragonKills: 0,
+                matchHeraldKills: 0,
+                matchKillForLevel3: 0,
+                matchAssistForLevel3: 0,
+                matchDeathForLevel3: 0,
+                matchKillForLevel2: 0,
+                matchAssistForLevel2: 0,
+                matchDeathForLevel2: 0,
+              };
+              for (let el of result) {
+                if (el.type === "CHAMPION_KILL") {
+                  if (el.killerId === summonerParticipantId) {
+                    if (el.timestamp > 140000 && el.timestamp < 170000) {
+                      summonerEventInfo.matchKillForLevel2 += 1;
+                      summonerEventInfo.matchKills += 1;
+                    } else if (el.timestamp > 200000 && el.timestamp < 240000) {
+                      summonerEventInfo.matchKillForLevel3 += 1;
+                      summonerEventInfo.matchKills += 1;
+                    } else {
+                      summonerEventInfo.matchKills += 1;
+                    }
+                  } else if (el.victimId === summonerParticipantId) {
+                    if (el.timestamp > 140000 && el.timestamp < 170000) {
+                      summonerEventInfo.matchDeathForLevel2 += 1;
+                      summonerEventInfo.matchDeaths += 1;
+                    } else if (el.timestamp > 200000 && el.timestamp < 240000) {
+                      summonerEventInfo.matchDeathForLevel3 += 1;
+                      summonerEventInfo.matchDeaths += 1;
+                    } else {
+                      summonerEventInfo.matchDeaths += 1;
+                    }
+                  } else if (
+                    el.assistingParticipantIds.includes(summonerParticipantId)
+                  ) {
+                    if (el.timestamp > 200000 && el.timestamp < 240000) {
+                      summonerEventInfo.matchAssistForLevel3 += 1;
+                      summonerEventInfo.matchAssists += 1;
+                    } else {
+                      summonerEventInfo.matchAssists += 1;
+                    }
+                  }
+                } else if (el.type === "ELITE_MONSTER_KILL") {
+                  if (el.killerId === summonerParticipantId) {
+                    if (el.monsterType === "DRAGON") {
+                      summonerEventInfo.matchDragonKills += 1;
+                    } else if (el.monsterType === "RIFTHERALD") {
+                      summonerEventInfo.matchHeraldKills += 1;
+                    }
+                  }
+                }
+              }
+              // console.log(summonerEventInfo);
+              return summonerEventInfo;
+            };
+            const temp = callback();
+            return temp;
           });
-        })
-        .then((result) => res.send(result));
+        eventDataArray.push(variable);
+      };
+
+      const callback = (array: matchInfo[]) => {
+        for (let el of array) {
+          getMatchTimeline(el);
+          // eventDataArray.push(result);
+        }
+        setTimeout(() => {
+          res.status(200).send(eventDataArray);
+        }, 3000);
+      };
+      callback(matchListArray);
     } catch (err) {
       console.log(err);
       res.status(404).send("nope");
+    }
+  };
+
+  /* 15분 골드 획득량 타임라인 */
+  static goldTimeline = (req: Request, res: Response) => {
+    try {
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  /* 15분 정글경험치 획득량 타임라인 */
+  static jungleExpTimeline = (req: Request, res: Response) => {
+    try {
+    } catch (err) {
+      console.log(err);
     }
   };
 }

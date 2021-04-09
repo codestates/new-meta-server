@@ -1,5 +1,4 @@
 import { Router } from "express";
-
 import SummonerController from "../controllers/SummonerController";
 
 const router = Router();
@@ -18,6 +17,7 @@ router.post("/recentchampions", SummonerController.summonerRecentChampions);
 
 /* 소환사의 최근 랭크 게임 20경기의 매치 타임라인 데이터 */
 
-router.post("/matchtimeline", SummonerController.matchTimeline);
+router.post("/eventtimeline", SummonerController.eventTimeline);
+/* router.post("/goldtimeline", SummonerController.goldTimeline);*/
 
 export default router;
