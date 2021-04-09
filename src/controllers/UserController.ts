@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getRepository, getConnection } from "typeorm";
+import { getRepository } from "typeorm";
 import { User } from "../entity/User";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
@@ -161,7 +161,7 @@ class UserController {
 	};
 
 	static userPasswordUpdate = async (req: Request, res: Response) => {
-		const { nickname, email, currentPassword, newPassword } = req.body;
+		const { email, currentPassword, newPassword } = req.body;
 
 		// 공란 있는지 확인
 		if (!currentPassword || !newPassword) {
@@ -175,8 +175,6 @@ class UserController {
 			.createQueryBuilder()
 			.where({ email })
 			.getOne();
-
-		console.log("user1", passwordMatch);
 
 		if (!passwordMatch.checkPassword(currentPassword)) {
 			return res
@@ -207,8 +205,14 @@ class UserController {
 			.where({ email })
 			.execute();
 
-		console.log("user2", user);
-		res.send({ user });
+		const result = await getRepository(User)
+			.createQueryBuilder()
+			.where({ email })
+			.getOne();
+
+		delete result.password;
+
+		res.send({ user: result, message: "Password changed successfully" });
 	};
 
 	static userDelete = async (req: Request, res: Response) => {
