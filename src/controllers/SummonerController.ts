@@ -1,15 +1,15 @@
-import express = require("express");
-import axios = require("axios");
-import dotenv = require("dotenv");
-import { response } from "express";
+import { Request, Response } from "express";
+import * as dotenv from "dotenv";
+import axios from "axios";
+import { register } from "tsconfig-paths";
+import { resolve } from "url";
 dotenv.config();
 const API_KEY = process.env.API_KEY;
 
 /* API Data */
 /* 클라이언트에서 사용자 소환사명과 포지션을 request로 받은 경우 */
-module.exports = {
-  summonerInfo: async (req, res) => {
-    console.log(req.body);
+class SummonerController {
+  static summonerInfo = (req: Request, res: Response) => {
     const summonerName = encodeURI(req.body.summonerName);
     return axios
       .get(
@@ -24,9 +24,9 @@ module.exports = {
         });
       })
       .catch((err) => res.status(404).send("Summoner Not Found"));
-  },
+  };
 
-  summonerLeagueInfo: (req, res) => {
+  static summonerLeagueInfo = (req: Request, res: Response) => {
     const encryptedSummonerId = req.body.id;
     return axios
       .get(
@@ -43,10 +43,10 @@ module.exports = {
           res.status(200).json(response.data);
         }
       });
-  },
-  summonerLaneInfo: (req, res) => {
-    const encryptedAccountId = req.body.accountId;
+  };
 
+  static summonerLaneInfo = (req: Request, res: Response) => {
+    const encryptedAccountId = req.body.accountId;
     return axios
       .get(
         `https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&endIndex=100&api_key=${API_KEY}`
@@ -75,21 +75,19 @@ module.exports = {
         }
         res.status(200).json(laneCount);
       });
-  },
+  };
 
   /* 최근 플레이한 챔피언의  */
-  summonerMatchList: (req, res) => {
+  static summonerMatchList = async (req: Request, res: Response) => {
     const encryptedAccountId = req.body.accountId;
     axios
       .get(
         `https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&api_key=${API_KEY}`
       )
-      .then((response) => {
-        res.json(response.data);
-      });
-  },
+      .then((response) => response.data);
+  };
 
-  summonerRecentChampions: async (req, res) => {
+  static summonerRecentChampions = async (req: Request, res: Response) => {
     /* getMatches로  */
     try {
       const accountId = req.body.accountId;
@@ -150,22 +148,74 @@ module.exports = {
           };
           return callback();
         });
+
       res.status(200).json(getMatchIDChampion);
     } catch (err) {
       console.log(err);
     }
-  },
+  };
 
-  /* 15분까지의 타임라인 데이터  */
+  /* *
+   * 15분까지의 타임라인 데이터
+   *  req.body의 summonerParticipantId 를 기준으로
+   * participantFrames에서 participantId:summonerParticipantId인 객체 map
+   * events 배열에서는 type이  "CHAMPION_KILL",  "ELITE_MONSTER_KILL" 인 객체만 map
+   */
 
-  matchTimeline: (req, res) => {
-    const gameId = req.body.gameId;
-    axios
-      .get(
-        `https://kr.api.riotgames.com/lol/match/v4/timelines/by-match/${gameId}?api_key=${API_KEY}`
-      )
-      .then((response) => {
-        res.send(response.data.frames);
-      });
-  },
-};
+  static matchTimeline = (req: Request, res: Response) => {
+    interface FrameData {
+      timestamp: number;
+      participants: object;
+      events: Array<object>;
+    }
+
+    interface EventData {
+      type: string;
+      timestamp: string;
+      monsterType?: string;
+      killerId?: number;
+      victimId?: number;
+      assistingParticipantIds?: Array<number>;
+    }
+
+    try {
+      let gameId = req.body[0].gameId;
+      let summonerParticipantId = req.body[0].stats.participantId;
+
+      const getMatchTimeline = axios
+        .get(
+          `https://kr.api.riotgames.com/lol/match/v4/timelines/by-match/${gameId}?api_key=${API_KEY}`
+        )
+        .then((response) => {
+          const arr: FrameData[] = response.data.frames;
+          return arr;
+        })
+        .then((result: FrameData[]) => {
+          return result.filter((el) => {
+            return el.timestamp !== 0 && el.timestamp < 910000;
+          });
+        })
+        .then((output: FrameData[]) => {
+          let eventTimeline = output.map((el) => {
+            return el.events;
+          });
+          return eventTimeline;
+        })
+        .then((output: EventData[][]) => {
+          return output.filter((el: EventData[]) => {
+            return el.filter((el) => {
+              return (
+                el.type === "CHAMPION_KILL" || el.type === "ELITE_MONSTER_KILL"
+              );
+            });
+          });
+        })
+        .then((result) => res.send(result));
+    } catch (err) {
+      console.log(err);
+      res.status(404).send("nope");
+    }
+  };
+}
+
+export default SummonerController;
