@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ItemInfo = exports.ChampionInfo = void 0;
 const axios_1 = require("axios");
 const dotenv = require("dotenv");
 dotenv.config();
@@ -24,4 +25,12 @@ StaticController.ItemInfo = (req, res) => {
         .catch((err) => res.status(404).send("Item Data Not Found"));
 };
 exports.default = StaticController;
+function ChampionInfo(arg0, ChampionInfo) {
+    throw new Error("Function not implemented.");
+}
+exports.ChampionInfo = ChampionInfo;
+function ItemInfo(arg0, ItemInfo) {
+    throw new Error("Function not implemented.");
+}
+exports.ItemInfo = ItemInfo;
 //# sourceMappingURL=StaticController.js.map

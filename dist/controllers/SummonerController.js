@@ -36,7 +36,6 @@ SummonerController.summonerLeagueInfo = (req, res) => {
     return axios_1.default
         .get(`https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/${encryptedSummonerId}?api_key=${API_KEY}`)
         .then((response) => {
-        console.log(response.data);
         if (!response.data[0] ||
             response.data[0].wins + response.data[0].losses < 20) {
             res.status(400).send("Not enough Data to analyze");
@@ -79,29 +78,27 @@ SummonerController.summonerLaneInfo = (req, res) => {
         res.status(200).json(laneCount);
     });
 };
-/* 최근 플레이한 챔피언의  */
+/* 최근 플레이한 랭크게임 20경기 데이터 가져오기 */
 SummonerController.summonerMatchList = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const encryptedAccountId = req.body.accountId;
     axios_1.default
-        .get(`https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&api_key=${API_KEY}`)
-        .then((response) => response.data);
+        .get(`https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&endIndex=20&api_key=${API_KEY}`)
+        .then((response) => res.send(response.data.matches));
 });
+/* 최근 플레이한 랭크 게임 20경기에서 플레이한 챔피언 및 포지션, KDA 가져오기 */
 SummonerController.summonerRecentChampions = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    /* getMatches로  */
     try {
-        const accountId = req.body.accountId;
+        const matchListArray = req.body;
         const summonerName = req.body.name;
         const enCodedSummonerName = encodeURI(summonerName);
-        const getChampionStats = ({ gameId, champion }) => __awaiter(void 0, void 0, void 0, function* () {
-            const summonerPlayInfo = yield axios_1.default
-                .get(`https://kr.api.riotgames.com/lol/match/v4/matches/${gameId}?api_key=${API_KEY}`)
-                .then((response) => response.data)
-                .then((matchInfo) => matchInfo.participants)
-                .then((matchPlayerInfo) => matchPlayerInfo.filter((player) => {
-                return player.championId === champion;
-            }));
-            let result = {
-                gameId: gameId,
+        let matchList = [];
+        let resultArray = [];
+        const getChampionStats = (matchInfo, result) => {
+            let summonerPlayInfo = result.data.participants.filter((player) => {
+                return player.championId === matchInfo.champion;
+            });
+            let summonerMatchStats = {
+                gameId: matchInfo.gameId,
                 champion: summonerPlayInfo[0].championId,
                 stats: {
                     participantId: summonerPlayInfo[0].stats.participantId,
@@ -112,30 +109,16 @@ SummonerController.summonerRecentChampions = (req, res) => __awaiter(void 0, voi
                     lane: summonerPlayInfo[0].timeline.lane,
                 },
             };
-            return result;
+            return summonerMatchStats;
+        };
+        Promise.all(matchListArray.map((el) => {
+            return axios_1.default.get(`https://kr.api.riotgames.com/lol/match/v4/matches/${el.gameId}?api_key=${API_KEY}`);
+        })).then((result) => {
+            for (let i = 0; i < matchListArray.length; i++) {
+                resultArray.push(getChampionStats(matchListArray[i], result[i]));
+            }
+            res.status(200).send(resultArray);
         });
-        const getMatchIDChampion = yield axios_1.default
-            .get(`https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${accountId}?endIndex=20&api_key=${API_KEY}&summonerName=${enCodedSummonerName}`)
-            .then((response) => response.data.matches)
-            .then((matches) => {
-            let matchList = [];
-            matches.map((match) => {
-                matchList.push({ gameId: match.gameId, champion: match.champion });
-            });
-            return matchList;
-        })
-            .then((matchList) => __awaiter(void 0, void 0, void 0, function* () {
-            // console.log("matchList", matchList);
-            let resultArray = [];
-            const callback = () => __awaiter(void 0, void 0, void 0, function* () {
-                for (let el of matchList) {
-                    yield getChampionStats(el).then((result) => resultArray.push(result));
-                }
-                return resultArray;
-            });
-            return callback();
-        }));
-        res.status(200).json(getMatchIDChampion);
     }
     catch (err) {
         console.log(err);
@@ -246,7 +229,6 @@ SummonerController.eventTimeline = (req, res) => {
                             }
                         }
                     }
-                    // console.log(summonerEventInfo);
                     return summonerEventInfo;
                 };
                 const temp = callback();
@@ -261,7 +243,7 @@ SummonerController.eventTimeline = (req, res) => {
             }
             setTimeout(() => {
                 res.status(200).send(eventDataArray);
-            }, 3000);
+            }, 1500);
         };
         callback(matchListArray);
     }
@@ -270,21 +252,85 @@ SummonerController.eventTimeline = (req, res) => {
         res.status(404).send("nope");
     }
 };
-/* 15분 골드 획득량 타임라인 */
-SummonerController.goldTimeline = (req, res) => {
+SummonerController.expTimeline = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        let expDataArray = [];
+        const matchListArray = req.body;
+        const getMatchExp = (matchInfo, result) => {
+            const summonerParticipantId = matchInfo.stats.participantId;
+            let summonerExpData = [];
+            function temp(response) {
+                let result = response.data.frames.filter((el) => {
+                    return el.timestamp > 0 && el.timestamp < 910000;
+                });
+                let FrameDataArray = [];
+                for (let el of result) {
+                    FrameDataArray.push({
+                        participantFrames: el.participantFrames,
+                        timestamp: el.timestamp,
+                    });
+                    for (let i = 0; i < FrameDataArray.length; i++) {
+                        for (let j = 1; j < 11; j++) {
+                            if (FrameDataArray[i].participantFrames[String(j)]
+                                .participantId === summonerParticipantId) {
+                                summonerExpData.push({
+                                    timestamp: FrameDataArray[i].timestamp,
+                                    participantFrames: FrameDataArray[i].participantFrames[String(j)],
+                                });
+                            }
+                        }
+                    }
+                    FrameDataArray = [];
+                }
+            }
+            temp(result);
+            return summonerExpData;
+            /* 코드 실행순서 : getMatchExp => 20경기의 구간별 totalGod, minionsKilled, jungleMinionsKilled, 합산 => 평균 내기 */
+        };
+        Promise.all(matchListArray.map((el) => {
+            return axios_1.default.get(`https://kr.api.riotgames.com/lol/match/v4/timelines/by-match/${el.gameId}?api_key=${API_KEY}`);
+        }))
+            .then((result) => {
+            for (let i = 0; i < matchListArray.length; i++) {
+                expDataArray.push(getMatchExp(matchListArray[i], result[i]));
+            }
+            return expDataArray;
+        })
+            .then((expDataArray) => {
+            res.send(getAverageExp(expDataArray));
+        });
+        function getAverageExp(array) {
+            let result = [];
+            for (let i = 0; i < array.length; i++) {
+                for (let j = 0; j < array[i].length; j++) {
+                    if (result[j]) {
+                        result[j].timestamp = 60000 * (j + 1);
+                        result[j].currentGold +=
+                            array[i][j].participantFrames.currentGold / 20;
+                        result[j].totalGold +=
+                            array[i][j].participantFrames.totalGold / 20;
+                        result[j].minionsKilled +=
+                            array[i][j].participantFrames.minionsKilled / 20;
+                        result[j].jungleMinionsKilled +=
+                            array[i][j].participantFrames.jungleMinionsKilled / 20;
+                    }
+                    else {
+                        result[j] = {
+                            timestamp: 60000 * (j + 1),
+                            currentGold: array[0][0].participantFrames.currentGold,
+                            totalGold: array[0][0].participantFrames.totalGold,
+                            minionsKilled: array[0][0].participantFrames.minionsKilled,
+                            jungleMinionsKilled: array[0][0].participantFrames.jungleMinionsKilled,
+                        };
+                    }
+                }
+            }
+            return result;
+        }
     }
     catch (err) {
         console.log(err);
     }
-};
-/* 15분 정글경험치 획득량 타임라인 */
-SummonerController.jungleExpTimeline = (req, res) => {
-    try {
-    }
-    catch (err) {
-        console.log(err);
-    }
-};
+});
 exports.default = SummonerController;
 //# sourceMappingURL=SummonerController.js.map
