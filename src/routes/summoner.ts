@@ -9,7 +9,7 @@ router.post("/summonerinfo", SummonerController.summonerInfo);
 router.post("/leagueinfo", SummonerController.summonerLeagueInfo);
 // /* 소환사 랭크 게임 매치 리스트 */
 
-router.post("/matchlist", SummonerController.summonerMatchList);
+router.post("/recentmatchlist", SummonerController.summonerMatchList);
 
 router.post("/laneinfo", SummonerController.summonerLaneInfo);
 
@@ -18,6 +18,6 @@ router.post("/recentchampions", SummonerController.summonerRecentChampions);
 /* 소환사의 최근 랭크 게임 20경기의 매치 타임라인 데이터 */
 
 router.post("/eventtimeline", SummonerController.eventTimeline);
-/* router.post("/goldtimeline", SummonerController.goldTimeline);*/
+router.post("/exptimeline", SummonerController.expTimeline);
 
 export default router;
