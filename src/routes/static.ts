@@ -1,14 +1,12 @@
-const express = require("express");
-const router = express.Router();
-const controller = require("../controllers/static");
+import { Router } from "express";
+import StaticController = require("../controllers/StaticController");
+const router = Router();
 
 /* 챔피언, 아이템, 룬, 소환사주문 */
-router.get("/championInfo", controller.ChampionInfo);
+router.get("/championinfo", StaticController.ChampionInfo);
 
-router.get("/itemInfo", controller.ItemInfo);
+router.get("/iteminfo", StaticController.ItemInfo);
 
-router.get("/perkInfo", controller.perkInfo);
+// router.get("/spellInfo", StaticController.spellInfo);
 
-router.get("/spellInfo", controller.spellInfo);
-
-module.exports = router;
+export default router;
