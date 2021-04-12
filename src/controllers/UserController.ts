@@ -13,7 +13,7 @@ class UserController {
 		// 빈 요청값이 없는지 확인
 		if (!nickname || !email || !password) {
 			return res
-				.status(422)
+				.status(400)
 				.send({ message: "Nickname, email and password can't be blank" });
 		}
 
@@ -52,7 +52,7 @@ class UserController {
 
 		delete user.password;
 
-		res.send({ user, message: "Account created successfully" });
+		res.status(201).send({ user, message: "Account created successfully" });
 	};
 
 	static userLogin = async (req: Request, res: Response) => {
@@ -61,7 +61,7 @@ class UserController {
 		// 빈 요청값이 있는지 확인
 		if (!email || !password) {
 			return res
-				.status(422)
+				.status(400)
 				.send({ message: "Email and password can't be blank" });
 		}
 
@@ -73,12 +73,12 @@ class UserController {
 
 		// 이메일에 해당하는 유저 있는지 확인
 		if (!user) {
-			return res.status(400).send({ message: "Check your email or password" });
+			return res.status(401).send({ message: "Check your email or password" });
 		}
 
 		// 비밀번호 맞는지 확인
 		if (!user.checkPassword(password)) {
-			return res.status(400).send({ message: "Check your email or password" });
+			return res.status(401).send({ message: "Check your email or password" });
 		}
 
 		// 토큰 발급
@@ -96,15 +96,13 @@ class UserController {
 
 		delete user.password;
 
-		res.send({ user, token });
+		res.send({ user, token, message: "Logged in successfully" });
 	};
 
 	static userLogout = async (req: Request, res: Response) => {
-		const { email } = req.body;
-
 		// 토큰이 없는 경우
 		if (!req.headers.authorization) {
-			return res.status(401).send({ message: "Please login again" });
+			return res.status(400).send({ message: "Please login again" });
 		}
 
 		// 토큰 확인 된 경우
@@ -114,7 +112,7 @@ class UserController {
 
 			const user = await getRepository(User)
 				.createQueryBuilder()
-				.where({ email })
+				.where({ email: decoded.email })
 				.getOne();
 
 			// 새 토큰 발급
@@ -126,19 +124,17 @@ class UserController {
 
 			delete user.password;
 
-			return res.send({ user, message: "Logged out successfully" });
+			return res.send({ user, newToken, message: "Logged out successfully" });
 		} catch (error) {
 			// 토큰이 다른 경우
-			return res.status(400).send({ message: "Wrong access" });
+			return res.status(401).send({ message: "Invalid token" });
 		}
 	};
 
 	static userReadProfile = async (req: Request, res: Response) => {
-		const { nickname, email, password } = req.body;
-
 		// 토큰이 없는 경우
 		if (!req.headers.authorization) {
-			return res.status(401).send({ message: "Please login again" });
+			return res.status(400).send({ message: "Please login again" });
 		}
 
 		// 토큰 확인 된 경우
@@ -148,15 +144,15 @@ class UserController {
 
 			const user = await getRepository(User)
 				.createQueryBuilder()
-				.where({ email })
+				.where({ email: decoded.email })
 				.getOne();
 
 			delete user.password;
 
-			res.send({ user });
+			res.send({ user, message: "Ok" });
 		} catch (error) {
 			// 토큰이 다른 경우
-			return res.status(400).send({ message: "Wrong access" });
+			return res.status(401).send({ message: "Invalid token" });
 		}
 	};
 
@@ -178,41 +174,40 @@ class UserController {
 
 		if (!passwordMatch.checkPassword(currentPassword)) {
 			return res
-				.status(400)
+				.status(401)
 				.send({ message: "Please check your current password" });
 		}
 
 		// 토큰이 없는 경우
 		if (!req.headers.authorization) {
-			return res.status(401).send({ message: "Please login again" });
+			return res.status(400).send({ message: "Please login again" });
 		}
 
 		// 토큰 확인
 		const token = req.headers.authorization.split(" ")[1];
-		let decoded: any;
 		try {
-			decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+			const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+
+			const hashedNewPassword = bcrypt.hashSync(newPassword, 8);
+			const user = await getRepository(User)
+				.createQueryBuilder()
+				.update(User)
+				.set({ password: hashedNewPassword })
+				.where({ email: decoded.email })
+				.execute();
+
+			const result = await getRepository(User)
+				.createQueryBuilder()
+				.where({ email })
+				.getOne();
+
+			delete result.password;
+
+			res.send({ user: result, message: "Password changed successfully" });
 		} catch (error) {
 			// 토큰이 다른 경우
-			return res.status(400).send({ message: "Wrong access" });
+			return res.status(401).send({ message: "Invalid token" });
 		}
-
-		const hashedNewPassword = bcrypt.hashSync(newPassword, 8);
-		const user = await getRepository(User)
-			.createQueryBuilder()
-			.update(User)
-			.set({ password: hashedNewPassword })
-			.where({ email })
-			.execute();
-
-		const result = await getRepository(User)
-			.createQueryBuilder()
-			.where({ email })
-			.getOne();
-
-		delete result.password;
-
-		res.send({ user: result, message: "Password changed successfully" });
 	};
 
 	static userDelete = async (req: Request, res: Response) => {
@@ -220,7 +215,7 @@ class UserController {
 
 		// 토큰이 없는 경우
 		if (!req.headers.authorization) {
-			res.status(401).send({ message: "Please login again" });
+			res.status(400).send({ message: "Please login again" });
 		}
 
 		// 현 비밀번호 제대로 입력했는지 확인
@@ -231,7 +226,7 @@ class UserController {
 
 		if (!user.checkPassword(password)) {
 			return res
-				.status(400)
+				.status(401)
 				.send({ message: "Please check your current password" });
 		}
 
@@ -243,13 +238,13 @@ class UserController {
 			const user = await getRepository(User)
 				.createQueryBuilder()
 				.delete()
-				.where({ email })
+				.where({ email: decoded.email })
 				.execute();
 
 			res.send({ message: "Account deleted successfully" });
 		} catch (error) {
 			// 토큰이 다른 경우
-			return res.status(400).send({ message: "Wrong access" });
+			return res.status(401).send({ message: "Invalid token" });
 		}
 	};
 }
