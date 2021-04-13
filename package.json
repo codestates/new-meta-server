@@ -6,7 +6,8 @@
 	"scripts": {
 		"start": "tsc && node dist/app.js",
 		"prod": "tsc && node dist/app.js",
-		"typeorm": "ts-node -r tsconfig-paths/register src/app.ts"
+		"typeorm": "ts-node -r tsconfig-paths/register src/app.ts",
+		"dev": "nodemon -w src --ext ts --exec ts-node src/app.ts"
 	},
 	"repository": {
 		"type": "git",
