@@ -14,6 +14,7 @@ require("reflect-metadata");
 const typeorm_1 = require("typeorm");
 const express = require("express");
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const morgan = require("morgan");
 const routes_1 = require("./routes");
@@ -24,6 +25,7 @@ typeorm_1.createConnection()
     // 기본 설정
     const app = express();
     app.use(bodyParser.json());
+    app.use(cookieParser());
     app.use(morgan("dev"));
     app.use(cors({
         origin: true,
