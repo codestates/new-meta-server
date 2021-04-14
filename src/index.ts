@@ -7,6 +7,9 @@ import session from "express-session";
 import connectRedis from "connect-redis";
 import cors from "cors";
 import dotenv from "dotenv";
+
+import routes from "./routes"
+
 dotenv.config();
 
 import { redisClient } from "./redis";
@@ -34,6 +37,8 @@ const main = async () => {
 		})
 	);
 
+	app.use('/', routes);
+
 	app.use(
 		session({
 			store: new RedisStore({
@@ -50,6 +55,8 @@ const main = async () => {
 			},
 		})
 	);
+
+
 
 	apolloServer.applyMiddleware({ app });
 
