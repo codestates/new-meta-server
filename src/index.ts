@@ -14,7 +14,10 @@ import { redisClient } from "./redis";
 // import { send } from "process";
 
 const main = async () => {
+  const app = express();
   await createConnection();
+  app.use(express.json())
+  app.use(express.urlencoded({ extended: false }));
 
   const schema = await buildSchema({
     resolvers: [__dirname + "/resolvers/*.ts"],
@@ -25,7 +28,7 @@ const main = async () => {
     context: ({ req, res }: any) => ({ req, res }),
   });
 
-  const app = express();
+  
 
   const RedisStore = connectRedis(session);
 
@@ -53,6 +56,8 @@ const main = async () => {
     })
   );
   app.use("/", routes);
+ 
+
 
   apolloServer.applyMiddleware({ app });
 
