@@ -1,10 +1,7 @@
 import { Request, Response } from "express";
 import * as dotenv from "dotenv";
 import axios from "axios";
-// import { register } from "tsconfig-paths";
-// import { resolve } from "url";
-// import { resolveSoa } from "dns";
-// import { SimpleConsoleLogger } from "typeorm";
+
 dotenv.config();
 const API_KEY = process.env.API_KEY;
 
@@ -438,7 +435,7 @@ class SummonerController {
           })
           .catch((err) => console.log(err));
       })
-      .catch((err) => res.status(404).send("Summoner Not Found"));
+      .catch(() => res.status(404).send("Summoner Not Found"));
   };
 }
 
