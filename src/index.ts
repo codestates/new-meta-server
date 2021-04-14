@@ -6,6 +6,8 @@ import { createConnection } from "typeorm";
 import session from "express-session";
 import connectRedis from "connect-redis";
 import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
 
 import { redis } from "./redis";
 
@@ -38,7 +40,7 @@ const main = async () => {
 				client: redis,
 			}),
 			name: "auth",
-			secret: "12345678",
+			secret: process.env.SESSION_SECRET as string,
 			resave: false,
 			saveUninitialized: true,
 			cookie: {

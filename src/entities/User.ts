@@ -4,9 +4,11 @@ import {
 	Column,
 	Entity,
 	OneToMany,
+	OneToOne,
 	PrimaryGeneratedColumn,
 } from "typeorm";
 
+import { OpenAuth } from "./OpenAuth";
 import { Post } from "./Post";
 import { Bookmark } from "./Bookmark";
 import { Like } from "./Like";
@@ -20,14 +22,17 @@ export class User extends BaseEntity {
 
 	@Field()
 	@Column()
-	nickname: string;
+	nickname!: string;
 
 	@Field()
 	@Column()
-	email: string;
+	email!: string;
 
 	@Column()
-	password: string;
+	password!: string;
+
+	@OneToOne(() => OpenAuth, (openAuth) => openAuth.user)
+	openAuth?: OpenAuth;
 
 	@Field(() => [Post], { nullable: true })
 	@OneToMany(() => Post, (post) => post.user, { nullable: true })

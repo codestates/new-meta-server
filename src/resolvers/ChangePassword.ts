@@ -1,28 +1,30 @@
-// import bcrypt from "bcryptjs";
-// import { User } from "../entities/User";
-// import { Arg, Ctx, Mutation, Resolver } from "type-graphql";
-// import { ChangePasswordInput } from "./validation/ChangePasswordInput";
-// import { redis } from "src/redis";
-// import { MyContext } from "src/types/MyContext";
+import bcrypt from "bcryptjs";
+import { Arg, Ctx, Mutation, Resolver } from "type-graphql";
+import { ChangePasswordInput } from "./types/inputs/ChangePasswordInput";
+import { MyContext } from "./types/MyContext";
 
-// @Resolver()
-// export class ChangePasswordResolver {
-// 	@Mutation(() => User, { nullable: true })
-// 	async changePassword(
-// 		@Arg("data") { currentPassword, newPassword }: ChangePasswordInput
-//         @Ctx() ctx: MyContext
-// 	): Promise<User | null> {
-//         const userId = await redis.get(userId)
+import { User } from "../entities/User";
+@Resolver()
+export class ChangePasswordResolver {
+	@Mutation(() => User, { nullable: true })
+	async changePassword(
+		@Arg("data") { currentPassword, newPassword }: ChangePasswordInput,
+		@Ctx() ctx: MyContext
+	): Promise<User | any> {
+		const userId = ctx.req.session!.userId;
+		if (!userId) return undefined;
 
-// 		const user = await User.findOne({ userId  });
-// 		if (!user) return null;
+		const user = await User.findOne({ id: userId });
+		if (!user) return null;
 
-// 		const valid = await bcrypt.compare(currentPassword, user.password);
-// 		if (!valid) return null;
+		const valid = bcrypt.compare(currentPassword, user.password);
+		if (!valid) return null;
 
-// 		user.password = await bcrypt.hash(newPassword, 8);
-// 		await user.save();
+		user.password = await bcrypt.hash(newPassword, 8);
+		await user.save();
 
-// 		return user;
-// 	}
-// }
+		ctx.req.session!.userId = user.id;
+
+		return user;
+	}
+}
