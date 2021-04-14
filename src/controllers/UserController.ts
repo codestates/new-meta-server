@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { getRepository } from "typeorm";
-import { User } from "../entity/User";
+import { User } from "../entities/User";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
 import * as dotenv from "dotenv";
