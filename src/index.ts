@@ -9,7 +9,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
 
-import { redis } from "./redis";
+import { redisClient } from "./redis";
 
 const main = async () => {
 	await createConnection();
@@ -37,7 +37,7 @@ const main = async () => {
 	app.use(
 		session({
 			store: new RedisStore({
-				client: redis,
+				client: redisClient,
 			}),
 			name: "auth",
 			secret: process.env.SESSION_SECRET as string,
