@@ -118,7 +118,7 @@ class SummonerController {
     const summonerName = encodeURI(req.body.summonerName);
     let encryptedAccountId: string = "";
     let encryptedSummonerId: string = "";
-
+  
     return axios
       .get(
         `https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}?api_key=${API_KEY}`
