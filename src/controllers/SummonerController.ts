@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import * as dotenv from "dotenv";
 import axios from "axios";
-import { register } from "tsconfig-paths";
-import { resolve } from "url";
-import { resolveSoa } from "dns";
-import { SimpleConsoleLogger } from "typeorm";
+// import { register } from "tsconfig-paths";
+// import { resolve } from "url";
+// import { resolveSoa } from "dns";
+// import { SimpleConsoleLogger } from "typeorm";
 dotenv.config();
 const API_KEY = process.env.API_KEY;
 
@@ -54,7 +54,7 @@ class SummonerController {
     interface FrameData {
       timestamp: number;
       participants: object;
-      events: Array<object>;
+      events: Array<EventData>;
     }
 
     interface EventData {
@@ -63,7 +63,7 @@ class SummonerController {
       monsterType?: string;
       killerId?: number;
       victimId?: number;
-      assistingParticipantIds?: Array<number>;
+      assistingParticipantIds: Array<number>;
     }
 
     interface KDAEventData {
@@ -79,9 +79,22 @@ class SummonerController {
       matchAssistForLevel2: number;
       matchDeathForLevel2: number;
     }
+
+    interface Position {
+      "x": number;
+      "y": number;
+
+    }
+
+      interface FrameExpData {
+      timestamp: number;
+      participantFrames: ParticipantFrames;
+     
+    }
     interface ParticipantFrames {
+      [index: string]: any;
       participantId: number;
-      position: object;
+      position: Position;
       currentGold: number;
       totalGold: number;
       level: number;
@@ -90,6 +103,7 @@ class SummonerController {
       jungleMinionsKilled: number;
       dominionScore: number;
       teamScore: number;
+      
     }
 
     interface AverageExpData {
@@ -100,11 +114,8 @@ class SummonerController {
       minionsKilled: number;
     }
 
-    interface FrameExpData {
-      timestamp: number;
-      participantFrames: ParticipantFrames;
-      events?: [];
-    }
+  
+
 
     let summonerAllData: SummonerAllData = {};
     const summonerName = encodeURI(req.body.summonerName);
@@ -119,7 +130,7 @@ class SummonerController {
         summonerAllData.summonerInfo = response.data;
         return response.data;
       })
-      .then(() => {
+      .then((summonerAllData) => {
         // 티어 및 랭크게임 전적 보기
         encryptedSummonerId = summonerAllData.summonerInfo.id; // 잘 들어감
         return axios
@@ -187,10 +198,10 @@ class SummonerController {
 
             const getChampionStats = (
               matchInfo: MatchInfo,
-              result
+              result:any
             ): PlayerMatchInfo => {
               let summonerPlayInfo = result.data.participants.filter(
-                (player) => {
+                (player: { championId: number; }) => {
                   return player.championId === matchInfo.champion;
                 }
               );
@@ -222,25 +233,25 @@ class SummonerController {
                 getChampionStats(matchListArray[i], recentMatchData[i])
               );
             }
-            const getKDATimeline = (el: PlayerMatchInfo, result) => {
-              const gameId = el.gameId;
+            const getKDATimeline = (el: PlayerMatchInfo, result:any) => {
               const summonerParticipantId = el.stats.participantId;
               let arr: FrameData[] = result.data.frames;
-              let linePhaseData = arr.filter((el) => {
+              let linePhaseData:FrameData[] = arr.filter((el) => {
                 return el.timestamp > 0 && el.timestamp < 910000;
               });
 
-              let eventTimeline = linePhaseData.map((el) => {
+              let eventTimeline:EventData[][] = linePhaseData.map((el) => {
                 return el.events;
               });
 
-              let eventArray = [];
+              let eventArray: EventData[] = [];
+              
               for (let el of eventTimeline) {
                 for (let ele of el) {
                   eventArray.push(ele);
                 }
               }
-              let kdaEventArray = eventArray.filter((el) => {
+              let kdaEventArray = eventArray.filter((el:EventData) => {
                 return (
                   el.type === "CHAMPION_KILL" ||
                   el.type === "ELITE_MONSTER_KILL"
@@ -261,6 +272,7 @@ class SummonerController {
                   matchDeathForLevel2: 0,
                 };
                 for (let el of array) {
+                
                   if (el.type === "CHAMPION_KILL") {
                     if (el.killerId === summonerParticipantId) {
                       if (el.timestamp > 140000 && el.timestamp < 170000) {
@@ -313,8 +325,8 @@ class SummonerController {
               return callback(kdaEventArray);
             };
 
-            const getExpTimeline = (el: PlayerMatchInfo, result) => {
-              const summonerParticipantId = el.stats.participantId;
+            const getExpTimeline = (el: PlayerMatchInfo, result:any) => {
+              const summonerParticipantId:number = el.stats.participantId;
               let summonerExpData: FrameExpData[] = [];
 
               let linePhaseData: FrameExpData[] = result.data.frames.filter(
@@ -322,7 +334,7 @@ class SummonerController {
                   return el.timestamp > 0 && el.timestamp < 910000;
                 }
               );
-              let resultDataArray = [];
+              let resultDataArray:FrameExpData[][] = [];
               function temp(linePhaseData: FrameExpData[]) {
                 let FrameDataArray: FrameExpData[] = [];
                 for (let el of linePhaseData) {
@@ -333,13 +345,13 @@ class SummonerController {
                   for (let i = 0; i < FrameDataArray.length; i++) {
                     for (let j = 1; j < 11; j++) {
                       if (
-                        FrameDataArray[i].participantFrames[String(j)]
+                        FrameDataArray[i].participantFrames[j.toString()]
                           .participantId === summonerParticipantId
                       ) {
                         summonerExpData.push({
                           timestamp: FrameDataArray[i].timestamp,
                           participantFrames:
-                            FrameDataArray[i].participantFrames[String(j)],
+                            FrameDataArray[i].participantFrames[j.toString()],
                         });
                       }
                     }
@@ -392,7 +404,7 @@ class SummonerController {
 
             function getTimelineData() {
               Promise.all(
-                summonerAllData.recentChampionStats.map((el) => {
+                summonerAllData.recentChampionStats.map((el:PlayerMatchInfo) => {
                   return axios.get(
                     `https://kr.api.riotgames.com/lol/match/v4/timelines/by-match/${el.gameId}?api_key=${API_KEY}`
                   );
