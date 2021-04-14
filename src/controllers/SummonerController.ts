@@ -10,16 +10,16 @@ const API_KEY = process.env.API_KEY;
 class SummonerController {
   static summonerInfo = (req: Request, res: Response) => {
     interface SummonerAllData {
-      summonerInfo?: {
+      summonerInfo: {
         id: string;
         accountId: string;
         name: string;
       };
       leagueInfo?: {};
       laneInfo?: {};
-      recentMatches?: [];
-      recentChampionStats?: PlayerMatchInfo[];
-      kdaTimelineData?: KDAEventData[];
+      recentMatches: [];
+      recentChampionStats: PlayerMatchInfo[];
+      kdaTimelineData: KDAEventData[];
       expTimelineData?: AverageExpData[];
     }
 
@@ -78,15 +78,13 @@ class SummonerController {
     }
 
     interface Position {
-      "x": number;
-      "y": number;
-
+      x: number;
+      y: number;
     }
 
-      interface FrameExpData {
+    interface FrameExpData {
       timestamp: number;
       participantFrames: ParticipantFrames;
-     
     }
     interface ParticipantFrames {
       [index: string]: any;
@@ -100,7 +98,6 @@ class SummonerController {
       jungleMinionsKilled: number;
       dominionScore: number;
       teamScore: number;
-      
     }
 
     interface AverageExpData {
@@ -111,30 +108,36 @@ class SummonerController {
       minionsKilled: number;
     }
 
-  
-
-
-    let summonerAllData: SummonerAllData = {};
+    let summonerAllData: SummonerAllData = {
+      summonerInfo: {
+        id: "",
+        accountId: "",
+        name: "",
+      },
+      recentMatches: [],
+      recentChampionStats: [],
+      kdaTimelineData: [],
+    };
     const summonerName = encodeURI(req.body.summonerName);
     let encryptedAccountId: string = "";
     let encryptedSummonerId: string = "";
-  
+
     return axios
       .get(
         `https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}?api_key=${API_KEY}`
       )
       .then((response) => {
         summonerAllData.summonerInfo = response.data;
-        return response.data;
-      })
-      .then((summonerAllData) => {
         // 티어 및 랭크게임 전적 보기
+
         encryptedSummonerId = summonerAllData.summonerInfo.id; // 잘 들어감
         return axios
           .get(
             `https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/${encryptedSummonerId}?api_key=${API_KEY}`
           )
           .then((response) => {
+            // console.log("response : ", response);
+
             if (
               !response.data[0] ||
               response.data[0].wins + response.data[0].losses < 20
@@ -195,10 +198,10 @@ class SummonerController {
 
             const getChampionStats = (
               matchInfo: MatchInfo,
-              result:any
+              result: any
             ): PlayerMatchInfo => {
               let summonerPlayInfo = result.data.participants.filter(
-                (player: { championId: number; }) => {
+                (player: { championId: number }) => {
                   return player.championId === matchInfo.champion;
                 }
               );
@@ -230,25 +233,25 @@ class SummonerController {
                 getChampionStats(matchListArray[i], recentMatchData[i])
               );
             }
-            const getKDATimeline = (el: PlayerMatchInfo, result:any) => {
+            const getKDATimeline = (el: PlayerMatchInfo, result: any) => {
               const summonerParticipantId = el.stats.participantId;
               let arr: FrameData[] = result.data.frames;
-              let linePhaseData:FrameData[] = arr.filter((el) => {
+              let linePhaseData: FrameData[] = arr.filter((el) => {
                 return el.timestamp > 0 && el.timestamp < 910000;
               });
 
-              let eventTimeline:EventData[][] = linePhaseData.map((el) => {
+              let eventTimeline: EventData[][] = linePhaseData.map((el) => {
                 return el.events;
               });
 
               let eventArray: EventData[] = [];
-              
+
               for (let el of eventTimeline) {
                 for (let ele of el) {
                   eventArray.push(ele);
                 }
               }
-              let kdaEventArray = eventArray.filter((el:EventData) => {
+              let kdaEventArray = eventArray.filter((el: EventData) => {
                 return (
                   el.type === "CHAMPION_KILL" ||
                   el.type === "ELITE_MONSTER_KILL"
@@ -269,7 +272,6 @@ class SummonerController {
                   matchDeathForLevel2: 0,
                 };
                 for (let el of array) {
-                
                   if (el.type === "CHAMPION_KILL") {
                     if (el.killerId === summonerParticipantId) {
                       if (el.timestamp > 140000 && el.timestamp < 170000) {
@@ -322,8 +324,8 @@ class SummonerController {
               return callback(kdaEventArray);
             };
 
-            const getExpTimeline = (el: PlayerMatchInfo, result:any) => {
-              const summonerParticipantId:number = el.stats.participantId;
+            const getExpTimeline = (el: PlayerMatchInfo, result: any) => {
+              const summonerParticipantId: number = el.stats.participantId;
               let summonerExpData: FrameExpData[] = [];
 
               let linePhaseData: FrameExpData[] = result.data.frames.filter(
@@ -331,7 +333,7 @@ class SummonerController {
                   return el.timestamp > 0 && el.timestamp < 910000;
                 }
               );
-              let resultDataArray:FrameExpData[][] = [];
+              let resultDataArray: FrameExpData[][] = [];
               function temp(linePhaseData: FrameExpData[]) {
                 let FrameDataArray: FrameExpData[] = [];
                 for (let el of linePhaseData) {
@@ -401,11 +403,13 @@ class SummonerController {
 
             function getTimelineData() {
               Promise.all(
-                summonerAllData.recentChampionStats.map((el:PlayerMatchInfo) => {
-                  return axios.get(
-                    `https://kr.api.riotgames.com/lol/match/v4/timelines/by-match/${el.gameId}?api_key=${API_KEY}`
-                  );
-                })
+                summonerAllData.recentChampionStats.map(
+                  (el: PlayerMatchInfo) => {
+                    return axios.get(
+                      `https://kr.api.riotgames.com/lol/match/v4/timelines/by-match/${el.gameId}?api_key=${API_KEY}`
+                    );
+                  }
+                )
               )
                 .then((result) => {
                   for (
@@ -435,7 +439,9 @@ class SummonerController {
           })
           .catch((err) => console.log(err));
       })
-      .catch(() => res.status(404).send("Summoner Not Found"));
+      .catch((err) => {
+        console.log(err);
+      });
   };
 }
 
