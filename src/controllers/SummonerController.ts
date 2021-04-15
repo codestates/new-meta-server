@@ -20,7 +20,7 @@ class SummonerController {
       recentMatches: [];
       recentChampionStats: PlayerMatchInfo[];
       kdaTimelineData: KDAEventData[];
-      expTimelineData?: AverageExpData[];
+      expTimelineData?: FrameExpData[][];
     }
 
     interface MatchInfo {
@@ -324,6 +324,42 @@ class SummonerController {
               return callback(kdaEventArray);
             };
 
+            function getAverageExp(array: FrameExpData[][]) {
+              let result: AverageExpData[] = [];
+
+              for (let i = 0; i < array.length; i++) {
+                for (let j = 0; j < array[i].length; j++) {
+                  if (result[j]) {
+                    result[j].timestamp = 60000 * (j + 1);
+                    result[j].currentGold += Math.round(
+                      array[i][j].participantFrames.currentGold / 20
+                    );
+                    result[j].totalGold += Math.round(
+                      array[i][j].participantFrames.totalGold / 20
+                    );
+                    result[j].minionsKilled += Math.round(
+                      array[i][j].participantFrames.minionsKilled / 20
+                    );
+                    result[j].jungleMinionsKilled += Math.round(
+                      array[i][j].participantFrames.jungleMinionsKilled / 20
+                    );
+                  } else {
+                    result[j] = {
+                      timestamp: 60000 * (j + 1),
+                      currentGold: array[0][0].participantFrames.currentGold,
+                      totalGold: array[0][0].participantFrames.totalGold,
+                      minionsKilled:
+                        array[0][0].participantFrames.minionsKilled,
+                      jungleMinionsKilled:
+                        array[0][0].participantFrames.jungleMinionsKilled,
+                    };
+                  }
+                }
+              }
+              return result;
+            }
+
+
             const getExpTimeline = (el: PlayerMatchInfo, result: any) => {
               const summonerParticipantId: number = el.stats.participantId;
               let summonerExpData: FrameExpData[] = [];
@@ -332,8 +368,7 @@ class SummonerController {
                 (el: FrameData) => {
                   return el.timestamp > 0 && el.timestamp < 910000;
                 }
-              );
-              let resultDataArray: FrameExpData[][] = [];
+              ); 
               function temp(linePhaseData: FrameExpData[]) {
                 let FrameDataArray: FrameExpData[] = [];
                 for (let el of linePhaseData) {
@@ -355,48 +390,14 @@ class SummonerController {
                       }
                     }
                   }
-                  resultDataArray.push(summonerExpData);
                   FrameDataArray = [];
                 }
-                return resultDataArray;
+                return summonerExpData;
               }
               temp(linePhaseData);
+              return summonerExpData;
 
-              function getAverageExp(array: FrameExpData[][]) {
-                let result: AverageExpData[] = [];
-                for (let i = 0; i < array.length; i++) {
-                  for (let j = 0; j < array[i].length; j++) {
-                    if (result[j]) {
-                      result[j].timestamp = 60000 * (j + 1);
-                      result[j].currentGold += Math.round(
-                        array[i][j].participantFrames.currentGold / 20
-                      );
-                      result[j].totalGold += Math.round(
-                        array[i][j].participantFrames.totalGold / 20
-                      );
-                      result[j].minionsKilled += Math.round(
-                        array[i][j].participantFrames.minionsKilled / 20
-                      );
-                      result[j].jungleMinionsKilled += Math.round(
-                        array[i][j].participantFrames.jungleMinionsKilled / 20
-                      );
-                    } else {
-                      result[j] = {
-                        timestamp: 60000 * (j + 1),
-                        currentGold: array[0][0].participantFrames.currentGold,
-                        totalGold: array[0][0].participantFrames.totalGold,
-                        minionsKilled:
-                          array[0][0].participantFrames.minionsKilled,
-                        jungleMinionsKilled:
-                          array[0][0].participantFrames.jungleMinionsKilled,
-                      };
-                    }
-                  }
-                }
-                return result;
-              }
 
-              return getAverageExp(resultDataArray);
             };
 
             /* 코드 실행순서 : getMatchExp => 20경기의 구간별 totalGod, minionsKilled, jungleMinionsKilled, 합산 => 평균 내기 */
@@ -423,10 +424,11 @@ class SummonerController {
                         result[i]
                       )
                     );
-                    summonerAllData.expTimelineData = getExpTimeline(
+                    let expData: FrameExpData[][] = [];
+                    summonerAllData.expTimelineData?.push(getExpTimeline(
                       summonerAllData.recentChampionStats[i],
                       result[i]
-                    );
+                    ))
                   }
                   res.status(200).send(summonerAllData);
                 })
