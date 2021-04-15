@@ -7,6 +7,7 @@ import {
 	ManyToOne,
 	OneToMany,
 	PrimaryGeneratedColumn,
+	UpdateDateColumn,
 } from "typeorm";
 
 import { User } from "./User";
@@ -21,15 +22,35 @@ export class Post extends BaseEntity {
 
 	@Field()
 	@Column()
-	post_title: string;
+	champion: string;
 
 	@Field()
 	@Column()
-	post_content: string;
+	title: string;
+
+	@Field()
+	@Column()
+	description: string;
+
+	@Field()
+	@Column()
+	skills: string;
+
+	@Field()
+	@Column()
+	play: string;
+
+	@Field({ nullable: true })
+	@Column()
+	etc: string;
 
 	@Field()
 	@CreateDateColumn()
-	created_at: Date;
+	createdAt: Date;
+
+	@Field()
+	@UpdateDateColumn()
+	updatedAt: Date;
 
 	@Field(() => [Like], { nullable: true })
 	@OneToMany(() => Like, (like) => like.post)
