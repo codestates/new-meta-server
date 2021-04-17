@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import * as dotenv from "dotenv";
 import axios from "axios";
 
+
 dotenv.config();
 const API_KEY = process.env.API_KEY;
 
@@ -44,9 +45,6 @@ class SummonerController {
         deaths: number;
         assists: number;
       };
-      // timeline?: {
-      //   lane?: string;
-      // };
     }
     interface FrameData {
       timestamp: number;
@@ -122,6 +120,8 @@ class SummonerController {
     let encryptedAccountId: string = "";
     let encryptedSummonerId: string = "";
 
+    console.log(summonerName)
+
     return axios
       .get(
         `https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}?api_key=${API_KEY}`
@@ -151,7 +151,7 @@ class SummonerController {
             encryptedAccountId = summonerAllData.summonerInfo.accountId;
             return axios
               .get(
-                `https://kr.api.riotgames.com/lol/match/v4/matchlists/by-account/${encryptedAccountId}?queue=420&api_key=${API_KEY}`
+                `https://kr.api.riotgames.com/lol/match/v5/matchlists/by-account/${encryptedAccountId}?queue=420&api_key=${API_KEY}`
               )
               .then((response) => {
                 const matchList = response.data.matches;
