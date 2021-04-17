@@ -35,7 +35,7 @@ const main = async () => {
   app.use(
     cors({
       credentials: true,
-      origin: "http://localhost:4000",
+      origin: true,
     })
   );
 
@@ -43,6 +43,7 @@ const main = async () => {
     session({
       store: new RedisStore({
         client: redisClient,
+
       }),
       name: "auth",
       secret: process.env.SESSION_SECRET as string,
