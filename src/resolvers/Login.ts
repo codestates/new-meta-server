@@ -29,6 +29,9 @@ export class LoginResolver {
 					expiresIn: "30d",
 				}
 			),
+			user: await User.findOne({
+				email,
+			}),
 		};
 	}
 }
