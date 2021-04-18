@@ -5,16 +5,15 @@ import {
 	CreateDateColumn,
 	Entity,
 	ManyToOne,
-	OneToMany,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from "typeorm";
 
 import { User } from "./User";
-import { Like } from "./Like";
+// import { Like } from "./Like";
 
 @ObjectType()
-@Entity({ name: "posts" })
+@Entity()
 export class Post extends BaseEntity {
 	@Field()
 	@PrimaryGeneratedColumn("uuid")
@@ -52,10 +51,10 @@ export class Post extends BaseEntity {
 	@UpdateDateColumn()
 	updatedAt: Date;
 
-	@Field(() => [Like], { nullable: true })
-	@OneToMany(() => Like, (like) => like.post)
-	likes: Like[];
-
 	@ManyToOne(() => User, (user) => user.posts, { nullable: true })
 	user: User;
+
+	// @Field(() => [Like], { nullable: true })
+	// @OneToMany(() => Like, (like) => like.post)
+	// likes: Like[];
 }
