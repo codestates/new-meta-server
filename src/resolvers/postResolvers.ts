@@ -1,4 +1,11 @@
-import { Arg, Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
+import {
+	Arg,
+	Ctx,
+	Mutation,
+	Query,
+	Resolver,
+	UseMiddleware,
+} from "type-graphql";
 
 import { Post } from "../entities/Post";
 import { isAuth } from "./middleware/isAuth";
@@ -28,5 +35,19 @@ export class CreatePostResolver {
 		}).save();
 
 		return { ...post };
+	}
+
+	@Query(() => [Post])
+	@UseMiddleware(isAuth)
+	async readMyPosts(@Ctx() { payload }: MyContext) {
+		console.log(payload?.userId);
+		const posts = await Post.find({
+			where: {
+				user: payload?.userId,
+			},
+		});
+		if (!posts) throw new Error("Item not found");
+
+		return posts;
 	}
 }
