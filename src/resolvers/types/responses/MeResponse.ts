@@ -2,9 +2,9 @@ import { ObjectType, Field } from "type-graphql";
 import { User } from "../../../entities/User";
 
 @ObjectType()
-export class LoginResponse {
+export class MeResponse {
 	@Field()
-	accessToken: string;
+	token: string;
 
 	@Field(() => User, { nullable: true })
 	user?: User;
