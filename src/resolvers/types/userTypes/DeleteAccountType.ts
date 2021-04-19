@@ -2,7 +2,7 @@ import { IsEmail, MinLength } from "class-validator";
 import { Field, InputType } from "type-graphql";
 
 @InputType()
-export class DeleteAccountInput {
+export class DeleteAccountType {
 	@Field()
 	@IsEmail()
 	email: string;
