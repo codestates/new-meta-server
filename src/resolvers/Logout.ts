@@ -1,20 +1,9 @@
-import { MyContext } from "./types/MyContext";
-import { Ctx, Mutation, Resolver } from "type-graphql";
+// import { Ctx, Mutation, Resolver, UseMiddleware } from "type-graphql";
+// import { isAuth } from "./middleware/isAuth";
 
-@Resolver()
-export class LogoutResolver {
-	@Mutation(() => Boolean)
-	async logout(@Ctx() ctx: MyContext): Promise<Boolean> {
-		return new Promise((res, rej) =>
-			ctx.req.session!.destroy((err) => {
-				if (err) {
-					console.log(err);
-					return rej(false);
-				}
-
-				ctx.res.clearCookie("auth");
-				return res(true);
-			})
-		);
-	}
-}
+// @Resolver()
+// export class LogoutResolver {
+// 	@Mutation(() => Boolean)
+// 	@UseMiddleware(isAuth)
+// 	async logout() {}
+// }

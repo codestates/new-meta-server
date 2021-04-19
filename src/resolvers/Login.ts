@@ -1,30 +1,29 @@
-import { Arg, Ctx, Mutation, Resolver } from "type-graphql";
-import bcrypt from "bcryptjs";
+import { Arg, Mutation, Query, Resolver } from "type-graphql";
+import { compare } from "bcryptjs";
+import dotenv from "dotenv";
+dotenv.config();
+
 import { User } from "../entities/User";
-import { MyContext } from "./types/MyContext";
+import { LoginInput, LoginResponse } from "./types/userLogin";
+import { generateToken } from "../lib/jwt";
 
 @Resolver()
 export class LoginResolver {
-	@Mutation(() => User, { nullable: true })
+	@Query(() => String)
+	async hello() {
+		return "hello world";
+	}
+
+	@Mutation(() => LoginResponse)
 	async login(
-		@Arg("email") email: string,
-		@Arg("password") password: string,
-		@Ctx() ctx: MyContext
-	): Promise<User | string> {
-		const user = await User.findOne({ email });
+		@Arg("data") { email, password }: LoginInput
+	): Promise<LoginResponse> {
+		const user = await User.findOne({ where: { email } });
+		if (!user) throw new Error("Email not found");
 
-		if (!user) {
-			return "check your email or password";
-		}
+		const valid = await compare(password, user.password);
+		if (!valid) throw new Error("Check your password");
 
-		const valid = await bcrypt.compare(password, user.password);
-
-		if (!valid) {
-			return "check your email or password";
-		}
-
-		ctx.req.session!.userId = user.id;
-
-		return user;
+		return { token: generateToken(user.id), user };
 	}
 }
