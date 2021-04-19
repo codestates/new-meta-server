@@ -326,7 +326,7 @@ class SummonerController {
               return callback(kdaEventArray);
             };
 
-            function getAverageExp(array: FrameExpData[][]) {
+            /* function getAverageExp(array: FrameExpData[][]) {
               let result: AverageExpData[] = [];
 
               for (let i = 0; i < array.length; i++) {
@@ -359,7 +359,7 @@ class SummonerController {
                 }
               }
               return result;
-            }
+            } */
 
 
             const getExpTimeline = (el: PlayerMatchInfo, result: any) => {
@@ -427,24 +427,29 @@ class SummonerController {
                       )
                     );
                     let expData: FrameExpData[][] = [];
-                    summonerAllData.expTimelineData?.push(getExpTimeline(
+                    if (getExpTimeline(
+                      summonerAllData.recentChampionStats[i],
+                      result[i]
+                    ).length === 15) {
+                      summonerAllData.expTimelineData?.push(getExpTimeline(
                       summonerAllData.recentChampionStats[i],
                       result[i]
                     ))
+                    }
                   }
                   res.status(200).send(summonerAllData);
                 })
-                .catch((err) => console.log(err));
+                .catch((err) => res.send(err));
             }
 
             await setTimeout(() => {
               getTimelineData();
             }, 3000);
           })
-          .catch((err) => console.log(err));
+          .catch((err) => res.send(err));
       })
       .catch((err) => {
-        console.log(err);
+        res.send(err);
       });
   };
 }
