@@ -15,10 +15,7 @@ import { isAuth } from "./middleware/isAuth";
 
 import { MyContext } from "./types/MyContext";
 import { RegisterType } from "./types/userTypes/RegisterType";
-import {
-	LoginInputType,
-	LoginResponseType,
-} from "./types/userTypes/UserLoginType";
+import { LoginInputType, LoginResponseType } from "./types/userTypes/LoginType";
 import { UpdatePasswordType } from "./types/userTypes/UpdatePasswordType";
 
 @Resolver()
@@ -53,7 +50,7 @@ export class UserResolver {
 		const valid = await compare(password, user.password);
 		if (!valid) throw new Error("Check your password");
 
-		return { token: generateToken(user.id), user };
+		return { token: generateToken(user.id, user.email, user.nickname), user };
 	}
 
 	@Mutation(() => String)
