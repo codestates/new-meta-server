@@ -7,67 +7,93 @@ import cors from "cors";
 import dotenv from "dotenv";
 import routes from "./routes";
 dotenv.config();
+import https from "https";
+import fs from "fs";
 
 // import { send } from "process";
 
 const main = async () => {
-	const app = express();
+  const app = express();
 
-	if (process.env.NODE_ENV === "development") {
-		// config.development;
-		await createConnection({
-			type: "mysql",
-			host: "127.0.0.1",
-			// port: process.env.DB_PORT,
-			username: process.env.LOCAL_DATABASE_USERNAME,
-			password: process.env.LOCAL_DATABASE_PASSWORD,
-			database: process.env.LOCAL_DATABASE_NAME,
-			synchronize: true,
-			logging: false,
-			entities: ["src/entities/*.*"],
-		});
-	} else if (process.env.NODE_ENV === "deploy") {
-		// const temp = config.deploy;
-		await createConnection({
-			type: "mysql",
-			host: process.env.DB_HOST,
-			// port: process.env.DB_PORT,
-			username: process.env.DB_USERNAME,
-			password: process.env.DB_PASSWORD,
-			database: process.env.DB_DBNAME,
-			synchronize: true,
-			logging: true,
-			entities: ["src/entities/*.*"],
-		});
-	}
+  if (process.env.NODE_ENV === "development") {
+    // config.development;
+    await createConnection({
+      type: "mysql",
+      host: "127.0.0.1",
+      // port: process.env.DB_PORT,
+      username: process.env.LOCAL_DATABASE_USERNAME,
+      password: process.env.LOCAL_DATABASE_PASSWORD,
+      database: process.env.LOCAL_DATABASE_NAME,
+      synchronize: true,
+      logging: false,
+      entities: ["src/entities/*.*"],
+    });
+  } else if (process.env.NODE_ENV === "deploy") {
+    // const temp = config.deploy;
+    await createConnection({
+      type: "mysql",
+      host: process.env.DB_HOST,
+      // port: process.env.DB_PORT,
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DBNAME,
+      synchronize: true,
+      logging: true,
+      entities: ["src/entities/*.*"],
+    });
+  }
 
-	app.use(express.json());
-	app.use(express.urlencoded({ extended: false }));
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: false }));
 
-	const schema = await buildSchema({
-		resolvers: [__dirname + "/resolvers/*.ts"],
-	});
+  const schema = await buildSchema({
+    resolvers: [__dirname + "/resolvers/*.ts"],
+  });
 
-	const apolloServer = new ApolloServer({
-		schema,
-		context: ({ req, res }: any) => ({ req, res }),
-	});
+  const apolloServer = new ApolloServer({
+    schema,
+    context: ({ req, res }: any) => ({ req, res }),
+  });
 
-	app.use(
-		cors({
-			credentials: true,
-			origin: true,
-			methods: ["GET", "POST", "OPTIONS"],
-		})
-	);
+  app.use(
+    cors({
+      credentials: true,
+      origin: true,
+      methods: ["GET", "POST", "OPTIONS"],
+    })
+  );
 
-	app.use("/", routes);
+  app.use("/", routes);
 
-	// apolloServer.start();
-	apolloServer.applyMiddleware({ app });
+  // apolloServer.start();
+  apolloServer.applyMiddleware({ app });
 
-	const PORT = 4000;
-	app.listen(PORT, () => console.log(`Server is up on port ${PORT}/graphql`));
+  const PORT = 4000;
+  let server;
+  if (
+    fs.existsSync("/etc/letsencrypt/live/new-meta.ga/") &&
+    fs.existsSync("/etc/letsencrypt/live/new-meta.ga/")
+  ) {
+    const privateKey = fs.readFileSync(
+      "/etc/letsencrypt/live/new-meta.ga/privkey.pem",
+      "utf8"
+    );
+    const certificate = fs.readFileSync(
+      "/etc/letsencrypt/live/new-meta.ga/cert.pem",
+      "utf8"
+    );
+
+    const credentials = { key: privateKey, cert: certificate };
+    server = https.createServer(credentials, app);
+    server.listen(PORT, () =>
+      console.log(`🚀 HTTPS Server is starting on ${PORT}/graphql`)
+    );
+  } else {
+    server = app.listen(PORT);
+    console.log(`🚀 HTTP Server is starting on ${PORT}/graphql`);
+  }
+
+  // app.listen(PORT, () => console.log(`Server is up on port ${PORT}/graphql`));
 };
 
 main();
