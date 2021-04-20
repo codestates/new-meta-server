@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import * as dotenv from "dotenv";
 import axios from "axios";
 
+
 dotenv.config();
 const API_KEY = process.env.API_KEY;
 
@@ -20,7 +21,7 @@ class SummonerController {
       recentMatches: [];
       recentChampionStats: PlayerMatchInfo[];
       kdaTimelineData: KDAEventData[];
-      expTimelineData?: FrameExpData[][];
+      expTimelineData: FrameExpData[][];
     }
 
     interface MatchInfo {
@@ -44,9 +45,6 @@ class SummonerController {
         deaths: number;
         assists: number;
       };
-      // timeline?: {
-      //   lane?: string;
-      // };
     }
     interface FrameData {
       timestamp: number;
@@ -117,10 +115,14 @@ class SummonerController {
       recentMatches: [],
       recentChampionStats: [],
       kdaTimelineData: [],
+      expTimelineData: []
     };
-    const summonerName = encodeURI(req.body.summonerName);
+  
+    const summonerName =req.body.summonerName;
     let encryptedAccountId: string = "";
     let encryptedSummonerId: string = "";
+
+    console.log(summonerName)
 
     return axios
       .get(
@@ -324,7 +326,7 @@ class SummonerController {
               return callback(kdaEventArray);
             };
 
-            function getAverageExp(array: FrameExpData[][]) {
+            /* function getAverageExp(array: FrameExpData[][]) {
               let result: AverageExpData[] = [];
 
               for (let i = 0; i < array.length; i++) {
@@ -357,7 +359,7 @@ class SummonerController {
                 }
               }
               return result;
-            }
+            } */
 
 
             const getExpTimeline = (el: PlayerMatchInfo, result: any) => {
@@ -425,24 +427,29 @@ class SummonerController {
                       )
                     );
                     let expData: FrameExpData[][] = [];
-                    summonerAllData.expTimelineData?.push(getExpTimeline(
+                    if (getExpTimeline(
+                      summonerAllData.recentChampionStats[i],
+                      result[i]
+                    ).length === 15) {
+                      summonerAllData.expTimelineData?.push(getExpTimeline(
                       summonerAllData.recentChampionStats[i],
                       result[i]
                     ))
+                    }
                   }
                   res.status(200).send(summonerAllData);
                 })
-                .catch((err) => console.log(err));
+                .catch((err) => res.send(err));
             }
 
             await setTimeout(() => {
               getTimelineData();
             }, 3000);
           })
-          .catch((err) => console.log(err));
+          .catch((err) => res.send(err));
       })
       .catch((err) => {
-        console.log(err);
+        res.send(err);
       });
   };
 }
