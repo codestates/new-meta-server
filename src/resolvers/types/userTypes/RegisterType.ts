@@ -4,7 +4,7 @@ import { isEmailAlreadyExist } from "../../validation/isEmailAlreadyExist";
 import { isNicknameAlreadyExist } from "../../validation/isNicknameAlreadyExist";
 
 @InputType()
-export class RegisterInput {
+export class RegisterType {
 	@Field()
 	@Length(1, 20)
 	@isNicknameAlreadyExist({ message: "nickname already in use" })

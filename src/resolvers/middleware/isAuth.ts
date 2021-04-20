@@ -4,7 +4,7 @@ import { MyContext } from "../types/MyContext";
 
 export const isAuth: MiddlewareFn<MyContext> = ({ context }, next) => {
 	const { authorization } = context.req.headers;
-	console.log(authorization);
+
 	if (!authorization) throw new Error("Please login again");
 
 	try {
