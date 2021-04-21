@@ -19,9 +19,9 @@ import {
 	RegisterInputType,
 	RegisterResponseType,
 } from "./types/userTypes/RegisterType";
-import { LoginInputType, LoginResponseType } from "./types/userTypes/LoginType";
-import { UpdatePasswordType } from "./types/userTypes/UpdatePasswordType";
-import { LogoutResponseType } from "./types/UserTypes/LogoutTYpe";
+import { LoginInputType, LoginResponseType } from "./types/UserTypes/LoginType";
+import { UpdatePasswordType } from "./types/UserTypes/UpdatePasswordType";
+import { LogoutResponseType } from "./types/UserTypes/LogoutType";
 import { MyinfoResponseType } from "./types/UserTypes/MyInfoType";
 
 @Resolver()

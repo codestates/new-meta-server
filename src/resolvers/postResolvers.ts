@@ -15,11 +15,11 @@ import { MyContext } from "./types/MyContext";
 import {
 	CreatePostInputType,
 	CreatePostResponseType,
-} from "./types/postTypes/CreatePostType";
+} from "./types/PostTypes/CreatePostType";
 import {
 	UpdatePostInputType,
 	UpdatePostResponseType,
-} from "./types/postTypes/UpdatePostType";
+} from "./types/PostTypes/UpdatePostType";
 import { ReadOthersPostsByResponseType } from "./types/PostTypes/ReadOthersPostsByType";
 
 @Resolver()
@@ -33,6 +33,7 @@ export class CreatePostResolver {
 	) {
 		const post = await Post.create({
 			...data,
+
 			author: payload?.userNickname,
 			user: {
 				id: payload!.userId,
