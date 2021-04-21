@@ -10,13 +10,19 @@ import bcrypt, { compare } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 
 import { User } from "../entities/User";
+import { Post } from "../entities/Post";
 import { generateToken } from "../lib/jwt";
 import { isAuth } from "./middleware/isAuth";
 
 import { MyContext } from "./types/MyContext";
-import { RegisterType } from "./types/userTypes/RegisterType";
+import {
+	RegisterInputType,
+	RegisterResponseType,
+} from "./types/userTypes/RegisterType";
 import { LoginInputType, LoginResponseType } from "./types/userTypes/LoginType";
 import { UpdatePasswordType } from "./types/userTypes/UpdatePasswordType";
+import { LogoutResponseType } from "./types/UserTypes/LogoutTYpe";
+import { MyinfoResponseType } from "./types/UserTypes/MyInfoType";
 
 @Resolver()
 export class UserResolver {
@@ -25,12 +31,17 @@ export class UserResolver {
 		return "hello world";
 	}
 
-	@Mutation(() => User)
+	@Mutation(() => RegisterResponseType)
 	async register(
-		@Arg("data") { nickname, email, password }: RegisterType
+		@Arg("data") { nickname, email, password }: RegisterInputType
 	): Promise<User> {
-		const hashedPassword = await bcrypt.hash(password, 8);
+		const checkEmail = await User.findOne({ email });
+		if (checkEmail) throw new Error("Email already in use.");
 
+		const checkNickname = await User.findOne({ nickname });
+		if (checkNickname) throw new Error("Nickname already in use.");
+
+		const hashedPassword = await bcrypt.hash(password, 8);
 		const user = await User.create({
 			nickname,
 			email,
@@ -53,28 +64,24 @@ export class UserResolver {
 		return { token: generateToken(user.id, user.email, user.nickname), user };
 	}
 
-	@Mutation(() => String)
+	@Mutation(() => LogoutResponseType)
 	@UseMiddleware(isAuth)
 	async logout(@Ctx() { payload }: MyContext) {
-		try {
-			const newToken = sign({ payload }, process.env.TOKEN_SECRET as string, {
-				expiresIn: "1s",
-			});
+		const user = await User.findOne({ id: payload?.userId });
+		const newToken = sign({ payload }, process.env.TOKEN_SECRET as string, {
+			expiresIn: "1s",
+		});
 
-			return newToken;
-		} catch (error) {
-			throw new Error("Something went wrong");
-		}
+		return { token: newToken, message: "Logged out successfully.", user };
 	}
 
-	@Query(() => User, { nullable: true })
+	@Query(() => MyinfoResponseType)
 	@UseMiddleware(isAuth)
-	async me(@Ctx() { payload }: MyContext) {
-		try {
-			return await User.findOne({ where: { id: payload!.userId } });
-		} catch (error) {
-			return error;
-		}
+	async myInfo(@Ctx() { payload }: MyContext) {
+		const user = await User.findOne({ id: payload?.userId });
+		const posts = await Post.find({ where: { user: payload?.userId } });
+
+		return { user, posts };
 	}
 
 	@Mutation(() => User, { nullable: true })
