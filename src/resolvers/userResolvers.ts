@@ -118,4 +118,17 @@ export class UserResolver {
 
 		return true;
 	}
+
+	@Mutation(() => User, { nullable: true })
+	@UseMiddleware(isAuth)
+	async changeNickname(
+		@Arg("newNickname") newNickname : String,
+		@Ctx() { payload }: MyContext
+	) {
+		const user = await User.findOne({ id: payload?.userId });
+		if (!user) return null;
+		const newUser = {...user, nickname: newNickname}
+		await Object.assign(user, newUser).save();
+		return newUser;
+	}
 }
