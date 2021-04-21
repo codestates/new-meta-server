@@ -46,6 +46,12 @@ export class UpdatePostResponseType {
 	@Field()
 	etc: string;
 
+	@Field()
+	updatedAt: Date;
+
+	@Field()
+	createdAt: Date;
+
 	@Field(() => User)
 	user: User;
 }
