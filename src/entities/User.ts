@@ -8,9 +8,9 @@ import {
 } from "typeorm";
 
 import { Post } from "./Post";
+import { Like } from "./Like";
 // import { OpenAuth } from "./OpenAuth";
 // import { Bookmark } from "./Bookmark";
-// import { Like } from "./Like";
 
 @ObjectType()
 @Entity()
@@ -32,7 +32,11 @@ export class User extends BaseEntity {
 
 	@Field(() => [Post], { nullable: true })
 	@OneToMany(() => Post, (post) => post.user, { nullable: true })
-	posts: Post[] | null;
+	posts: Post[];
+
+	@Field(() => [Like], { nullable: true })
+	@OneToMany(() => Like, (like) => like.user)
+	likes: Like[];
 
 	// @Field(() => [Bookmark], { nullable: true })
 	// @OneToMany(() => Bookmark, (bookmark) => bookmark.follower)
@@ -41,8 +45,4 @@ export class User extends BaseEntity {
 	// @Field(() => [Bookmark], { nullable: true })
 	// @OneToMany(() => Bookmark, (bookmark) => bookmark.followee)
 	// followeeIds: Bookmark[];
-
-	// @Field(() => [Like], { nullable: true })
-	// @OneToMany(() => Like, (like) => like.user)
-	// likes: Like[];
 }

@@ -5,12 +5,13 @@ import {
 	CreateDateColumn,
 	Entity,
 	ManyToOne,
+	OneToMany,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from "typeorm";
 
 import { User } from "./User";
-// import { Like } from "./Like";
+import { Like } from "./Like";
 
 @ObjectType()
 @Entity()
@@ -39,7 +40,7 @@ export class Post extends BaseEntity {
 	@Column()
 	play: string;
 
-	@Field({ nullable: true })
+	@Field()
 	@Column()
 	etc: string;
 
@@ -51,10 +52,19 @@ export class Post extends BaseEntity {
 	@UpdateDateColumn()
 	updatedAt: Date;
 
+	@Field()
+	@Column()
+	author: string;
+
+	// @Field()
+	// @Column()
+	// nickname: string;
+
+	@Field(() => User)
 	@ManyToOne(() => User, (user) => user.posts, { nullable: true })
 	user: User;
 
-	// @Field(() => [Like], { nullable: true })
-	// @OneToMany(() => Like, (like) => like.post)
-	// likes: Like[];
+	@Field(() => [Like], { nullable: true })
+	@OneToMany(() => Like, (like) => like.post)
+	likes: Like[];
 }
