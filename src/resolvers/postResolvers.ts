@@ -20,6 +20,7 @@ import {
 	UpdatePostInputType,
 	UpdatePostResponseType,
 } from "./types/postTypes/UpdatePostType";
+import { ReadOthersPostsByResponseType } from "./types/PostTypes/ReadOthersPostsByType";
 
 @Resolver()
 export class CreatePostResolver {
@@ -32,14 +33,15 @@ export class CreatePostResolver {
 	) {
 		const post = await Post.create({
 			...data,
+			author: payload?.userNickname,
 			user: {
 				id: payload!.userId,
-				email: payload?.userEmail,
-				nickname: payload?.userNickname,
 			},
 		}).save();
 
-		return { ...post };
+		const user = await User.findOne({ id: payload?.userId });
+
+		return { ...post, user };
 	}
 
 	@Query(() => [Post])
@@ -50,23 +52,54 @@ export class CreatePostResolver {
 			where: {
 				user: payload?.userId,
 			},
+			order: {
+				createdAt: "DESC",
+			},
 		});
 		if (!posts) throw new Error("Item not found");
 
 		return posts;
 	}
 
-	@Query(() => [Post], { nullable: true })
-	async readOthersPosts(@Arg("email") email: string) {
-		const arrayedUserInfo = await User.find({
-			where: { email },
-		});
-
-		const [userInfo] = arrayedUserInfo;
+	@Query(() => ReadOthersPostsByResponseType, { nullable: true })
+	async readOthersPostsByEmail(@Arg("email") email: string) {
+		const user = await User.findOne({ email });
+		if (!user) throw new Error("User not found.");
 
 		const posts = await Post.find({
 			where: {
-				user: userInfo.id,
+				user: user.id,
+			},
+			order: {
+				createdAt: "DESC",
+			},
+		});
+
+		return { user, posts };
+	}
+
+	@Query(() => ReadOthersPostsByResponseType, { nullable: true })
+	async readOthersPostsByNickname(@Arg("nickname") nickname: string) {
+		const user = await User.findOne({ nickname });
+		if (!user) throw new Error("User not found.");
+
+		const posts = await Post.find({
+			where: {
+				user: user.id,
+			},
+			order: {
+				createdAt: "DESC",
+			},
+		});
+
+		return { user, posts };
+	}
+
+	@Query(() => [Post], { nullable: true })
+	async fetchAllPosts() {
+		const posts = await Post.find({
+			order: {
+				createdAt: "DESC",
 			},
 		});
 
@@ -79,28 +112,17 @@ export class CreatePostResolver {
 		@Arg("data") data: UpdatePostInputType,
 		@Ctx() { payload }: MyContext
 	) {
-		const arrayedPost = await Post.find({
-			where: {
-				user: payload?.userId,
-				id: data.id,
-			},
+		const post = await Post.findOne({
+			where: { id: data.id, user: payload?.userId },
 		});
-		if (arrayedPost.length === 0) throw new Error("Post not found");
+		if (!post) throw new Error("You can't update the post");
 
-		const [post] = arrayedPost;
-
-		const newPost = {
-			...data,
-			user: {
-				id: payload!.userId,
-				email: payload?.userEmail,
-				nickname: payload?.userNickname,
-			},
-		};
-
+		const newPost = { ...data };
 		await Object.assign(post, newPost).save();
 
-		return { ...newPost };
+		const user = await User.findOne({ id: payload?.userId });
+
+		return { ...post, user };
 	}
 
 	@Mutation(() => Boolean, { nullable: true })
@@ -109,15 +131,13 @@ export class CreatePostResolver {
 		@Arg("postId") postId: string,
 		@Ctx() { payload }: MyContext
 	) {
-		const arrayedPost = await Post.find({
+		const post = await Post.findOne({
 			where: {
 				id: postId,
 				user: payload?.userId,
 			},
 		});
-		if (arrayedPost.length === 0) throw new Error("Something went wrong.");
-
-		const [post] = arrayedPost;
+		if (!post) throw new Error("You can't delete the post.");
 
 		await post.remove();
 		return true;

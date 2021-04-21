@@ -1,19 +1,36 @@
-// import { Field, ObjectType } from "type-graphql";
-// import { BaseEntity, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Field, ObjectType } from "type-graphql";
+import {
+	BaseEntity,
+	Column,
+	CreateDateColumn,
+	Entity,
+	ManyToOne,
+	PrimaryGeneratedColumn,
+} from "typeorm";
 
-// import { User } from "./User";
-// import { Post } from "./Post";
+import { User } from "./User";
+import { Post } from "./Post";
 
-// @ObjectType()
-// @Entity({ name: "likes" })
-// export class Like extends BaseEntity {
-// 	@Field()
-// 	@PrimaryGeneratedColumn("uuid")
-// 	id: string;
+@ObjectType()
+@Entity()
+export class Like extends BaseEntity {
+	@Field()
+	@PrimaryGeneratedColumn("uuid")
+	id: string;
 
-// 	@ManyToOne(() => User, (user) => user.likes)
-// 	user: User;
+	@Field()
+	@Column()
+	postTitle: string;
 
-// 	@ManyToOne(() => Post, (post) => post.likes)
-// 	post: Post;
-// }
+	@Field()
+	@CreateDateColumn()
+	createdAt: Date;
+
+	@Field(() => User)
+	@ManyToOne(() => User, (user) => user.likes, { nullable: true })
+	user: User;
+
+	@Field(() => Post)
+	@ManyToOne(() => Post, (post) => post.likes, { nullable: true })
+	post: Post;
+}
