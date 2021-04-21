@@ -5,7 +5,7 @@ import { User } from "../../../entities/User";
 @InputType()
 export class UpdatePostInputType implements Partial<Post> {
 	@Field()
-	readonly id: string;
+	id!: string;
 
 	@Field({ nullable: true })
 	champion?: string;
