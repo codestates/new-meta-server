@@ -56,10 +56,6 @@ export class Post extends BaseEntity {
 	@Column()
 	author: string;
 
-	// @Field()
-	// @Column()
-	// nickname: string;
-
 	@Field(() => User)
 	@ManyToOne(() => User, (user) => user.posts, { nullable: true })
 	user: User;
