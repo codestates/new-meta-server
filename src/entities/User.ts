@@ -10,7 +10,6 @@ import {
 import { Post } from "./Post";
 import { Like } from "./Like";
 // import { OpenAuth } from "./OpenAuth";
-// import { Bookmark } from "./Bookmark";
 
 @ObjectType()
 @Entity()
@@ -37,12 +36,4 @@ export class User extends BaseEntity {
 	@Field(() => [Like], { nullable: true })
 	@OneToMany(() => Like, (like) => like.user)
 	likes: Like[];
-
-	// @Field(() => [Bookmark], { nullable: true })
-	// @OneToMany(() => Bookmark, (bookmark) => bookmark.follower)
-	// followerIds: Bookmark[];
-
-	// @Field(() => [Bookmark], { nullable: true })
-	// @OneToMany(() => Bookmark, (bookmark) => bookmark.followee)
-	// followeeIds: Bookmark[];
 }
