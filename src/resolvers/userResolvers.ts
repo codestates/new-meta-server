@@ -14,6 +14,7 @@ import { generateToken } from "../lib/jwt";
 import { User } from "../entities/User";
 import { Post } from "../entities/Post";
 import { Like } from "../entities/Like";
+import { Follow } from "../entities/Follow";
 
 import { isAuth } from "./middleware/isAuth";
 import { MyContext } from "./types/MyContext";
@@ -96,7 +97,21 @@ export class UserResolver {
 			.orderBy("like.createdAt", "DESC")
 			.getMany();
 
-		return { user, posts, likes };
+		const followings = await getRepository(Follow)
+			.createQueryBuilder("follow")
+			.innerJoinAndSelect("follow.target", "user")
+			.where({ subject: payload?.userId })
+			.orderBy("follow.createdAt", "DESC")
+			.getMany();
+
+		const followers = await getRepository(Follow)
+			.createQueryBuilder("follow")
+			.innerJoinAndSelect("follow.subject", "user")
+			.where({ target: payload?.userId })
+			.orderBy("follow.createdAt", "DESC")
+			.getMany();
+
+		return { user, posts, likes, followings, followers };
 	}
 
 	@Mutation(() => User, { nullable: true })
