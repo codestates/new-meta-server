@@ -119,14 +119,14 @@ export class UserResolver {
 		return true;
 	}
 
-	@Mutation(() => User, { nullable: true })
+	@Mutation(() => User)
 	@UseMiddleware(isAuth)
 	async changeNickname(
 		@Arg("newNickname") newNickname : String,
 		@Ctx() { payload }: MyContext
 	) {
 		const user = await User.findOne({ id: payload?.userId });
-		if (!user) return null;
+		if (!user) throw new Error("User not found");
 		const newUser = {...user, nickname: newNickname}
 		await Object.assign(user, newUser).save();
 		return newUser;
