@@ -1,6 +1,7 @@
-import { User } from "../../../entities/User";
 import { ObjectType, Field, InputType } from "type-graphql";
 import { IsEmail } from "class-validator";
+
+import { User } from "../../../entities/User";
 
 @InputType()
 export class LoginInputType implements Partial<User> {

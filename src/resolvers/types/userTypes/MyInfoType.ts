@@ -1,7 +1,8 @@
+import { ObjectType, Field } from "type-graphql";
+
 import { User } from "../../../entities/User";
 import { Post } from "../../../entities/Post";
 import { Like } from "../../../entities/Like";
-import { ObjectType, Field } from "type-graphql";
 
 @ObjectType()
 export class MyinfoResponseType {

@@ -1,5 +1,5 @@
 import { Field, ObjectType } from "type-graphql";
-import { JoinColumn } from "typeorm";
+
 import { Like } from "../../../entities/Like";
 import { Post } from "../../../entities/Post";
 import { User } from "../../../entities/User";

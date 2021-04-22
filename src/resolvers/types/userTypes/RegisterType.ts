@@ -1,7 +1,5 @@
 import { IsEmail, Length, MinLength } from "class-validator";
 import { Field, InputType, ObjectType } from "type-graphql";
-import { isEmailAlreadyExist } from "../../validation/isEmailAlreadyExist";
-import { isNicknameAlreadyExist } from "../../validation/isNicknameAlreadyExist";
 
 @InputType()
 export class RegisterInputType {

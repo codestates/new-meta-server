@@ -1,6 +1,6 @@
-import { Post } from "../../../entities/Post";
-import { User } from "../../../entities/User";
 import { ObjectType, Field, InputType } from "type-graphql";
+
+import { User } from "../../../entities/User";
 
 @InputType()
 export class CreatePostInputType {

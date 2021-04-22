@@ -56,10 +56,6 @@ export class LikeResolver {
 			},
 		});
 
-		const post = await Post.find({});
-
-		console.log(myLikes);
-
 		const user = await User.findOne({ id: payload?.userId });
 
 		return { user, likes: myLikes };

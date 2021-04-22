@@ -9,6 +9,7 @@ import {
 
 import { Post } from "./Post";
 import { Like } from "./Like";
+import { Follow } from "./Follow";
 // import { OpenAuth } from "./OpenAuth";
 
 @ObjectType()
@@ -36,4 +37,12 @@ export class User extends BaseEntity {
 	@Field(() => [Like], { nullable: true })
 	@OneToMany(() => Like, (like) => like.user)
 	likes: Like[];
+
+	@Field(() => [Follow], { nullable: true })
+	@OneToMany(() => Follow, (follow) => follow.subject, { nullable: true })
+	subject: Follow[];
+
+	@Field(() => [Follow], { nullable: true })
+	@OneToMany(() => Follow, (follow) => follow.target, { nullable: true })
+	target: Follow[];
 }
