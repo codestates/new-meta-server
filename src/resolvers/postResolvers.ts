@@ -123,7 +123,7 @@ export class CreatePostResolver {
 
 		const user = await User.findOne({ id: payload?.userId });
 
-		return { ...post, user };
+		return { post, user };
 	}
 
 	@Mutation(() => Boolean, { nullable: true })
