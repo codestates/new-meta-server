@@ -6,25 +6,25 @@ import {
 	Resolver,
 	UseMiddleware,
 } from "type-graphql";
+import { getRepository } from "typeorm";
 import bcrypt, { compare } from "bcryptjs";
 import { sign } from "jsonwebtoken";
+import { generateToken } from "../lib/jwt";
 
 import { User } from "../entities/User";
 import { Post } from "../entities/Post";
 import { Like } from "../entities/Like";
-import { generateToken } from "../lib/jwt";
-import { isAuth } from "./middleware/isAuth";
 
+import { isAuth } from "./middleware/isAuth";
 import { MyContext } from "./types/MyContext";
 import {
 	RegisterInputType,
 	RegisterResponseType,
-} from "./types/userTypes/RegisterType";
+} from "./types/UserTypes/RegisterType";
 import { LoginInputType, LoginResponseType } from "./types/UserTypes/LoginType";
 import { UpdatePasswordType } from "./types/UserTypes/UpdatePasswordType";
 import { LogoutResponseType } from "./types/UserTypes/LogoutType";
 import { MyinfoResponseType } from "./types/UserTypes/MyInfoType";
-import { getRepository } from 'typeorm';
 
 @Resolver()
 export class UserResolver {
@@ -60,10 +60,10 @@ export class UserResolver {
 		const user = await User.findOne({ where: { email } });
 		if (!user) throw new Error("Email not found");
 
-		const valid = await compare(password, user.password);
+		const valid = await compare(password, user.password!);
 		if (!valid) throw new Error("Check your password");
 
-		return { token: generateToken(user.id, user.email, user.nickname), user };
+		return { token: generateToken(user.id, user.email!, user.nickname), user };
 	}
 
 	@Mutation(() => LogoutResponseType)
@@ -81,13 +81,20 @@ export class UserResolver {
 	@UseMiddleware(isAuth)
 	async myInfo(@Ctx() { payload }: MyContext) {
 		const user = await User.findOne({ id: payload?.userId });
-		const posts = await Post.find({ where: { user: payload?.userId } });
-		// const likes = await Like.find({ where: { user: user }});
+
+		const posts = await getRepository(Post)
+			.createQueryBuilder("post")
+			.leftJoinAndSelect("post.user", "user")
+			.where({ user: payload?.userId })
+			.orderBy("post.createdAt", "DESC")
+			.getMany();
+
 		const likes = await getRepository(Like)
-		.createQueryBuilder("like")
-		.leftJoinAndSelect("like.post", "post")
-		.where({user: payload?.userId,})
-		.getMany();
+			.createQueryBuilder("like")
+			.leftJoinAndSelect("like.post", "post")
+			.where({ user: payload?.userId })
+			.orderBy("like.createdAt", "DESC")
+			.getMany();
 
 		return { user, posts, likes };
 	}
@@ -101,7 +108,7 @@ export class UserResolver {
 		const user = await User.findOne({ id: payload?.userId });
 		if (!user) throw new Error("User not found");
 
-		const valid = bcrypt.compare(currentPassword, user.password);
+		const valid = bcrypt.compare(currentPassword, user.password!);
 		if (!valid) throw new Error("Check your password");
 
 		user.password = await bcrypt.hash(newPassword, 8);
@@ -119,7 +126,7 @@ export class UserResolver {
 		const user = await User.findOne({ id: payload?.userId });
 		if (!user) return null;
 
-		const valid = await bcrypt.compare(password, user.password);
+		const valid = await bcrypt.compare(password, user.password!);
 		if (!valid) return null;
 
 		await user.remove();
@@ -130,12 +137,12 @@ export class UserResolver {
 	@Mutation(() => User)
 	@UseMiddleware(isAuth)
 	async changeNickname(
-		@Arg("newNickname") newNickname : String,
+		@Arg("newNickname") newNickname: String,
 		@Ctx() { payload }: MyContext
 	) {
 		const user = await User.findOne({ id: payload?.userId });
 		if (!user) throw new Error("User not found");
-		const newUser = {...user, nickname: newNickname}
+		const newUser = { ...user, nickname: newNickname };
 		await Object.assign(user, newUser).save();
 		return newUser;
 	}

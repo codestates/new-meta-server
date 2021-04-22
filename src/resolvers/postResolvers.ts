@@ -21,6 +21,7 @@ import {
 	UpdatePostResponseType,
 } from "./types/PostTypes/UpdatePostType";
 import { ReadOthersPostsByResponseType } from "./types/PostTypes/ReadOthersPostsByType";
+import { getRepository } from "typeorm";
 
 @Resolver()
 export class CreatePostResolver {
@@ -33,8 +34,6 @@ export class CreatePostResolver {
 	) {
 		const post = await Post.create({
 			...data,
-
-			author: payload?.userNickname,
 			user: {
 				id: payload!.userId,
 			},
@@ -67,14 +66,12 @@ export class CreatePostResolver {
 		const user = await User.findOne({ email });
 		if (!user) throw new Error("User not found.");
 
-		const posts = await Post.find({
-			where: {
-				user: user.id,
-			},
-			order: {
-				createdAt: "DESC",
-			},
-		});
+		const posts = await getRepository(Post)
+			.createQueryBuilder("post")
+			.innerJoinAndSelect("post.user", "user")
+			.where({ user: user.id })
+			.orderBy("post.createdAt", "DESC")
+			.getMany();
 
 		return { user, posts };
 	}
@@ -84,37 +81,37 @@ export class CreatePostResolver {
 		const user = await User.findOne({ nickname });
 		if (!user) throw new Error("User not found.");
 
-		const posts = await Post.find({
-			where: {
-				user: user.id,
-			},
-			order: {
-				createdAt: "DESC",
-			},
-		});
+		const posts = await getRepository(Post)
+			.createQueryBuilder("post")
+			.innerJoinAndSelect("post.user", "user")
+			.where({ user: user.id })
+			.orderBy("post.createdAt", "DESC")
+			.getMany();
 
 		return { user, posts };
 	}
 
 	@Query(() => [Post], { nullable: true })
 	async fetchAllPostsOrderByCreatedAt() {
-		const posts = await Post.find({
-			order: {
-				createdAt: "DESC",
-			},
-		});
+		const posts = await getRepository(Post)
+			.createQueryBuilder("post")
+			.innerJoinAndSelect("post.user", "user")
+			.leftJoinAndSelect("post.likes", "like")
+			.orderBy("post.createdAt", "DESC")
+			.getMany();
 
 		return posts;
 	}
 
 	@Query(() => [Post], { nullable: true })
 	async fetchAllPostsOrderByLikes() {
-		const posts = await Post.find({
-			order: {
-				numberOfLikes: "DESC",
-				createdAt: "DESC",
-			},
-		});
+		const posts = await getRepository(Post)
+			.createQueryBuilder("post")
+			.innerJoinAndSelect("post.user", "user")
+			.leftJoinAndSelect("post.likes", "like")
+			.orderBy("post.numberOfLikes", "DESC")
+			.addOrderBy("post.createdAt", "DESC")
+			.getMany();
 
 		return posts;
 	}
