@@ -41,6 +41,13 @@ export class LikeResolver {
 			postTitle: findPost!.title,
 		}).save();
 
+		const newNumberOfLikes = findPost!.numberOfLikes + 1;
+
+		await Object.assign(findPost, {
+			...findPost,
+			numberOfLikes: newNumberOfLikes,
+		}).save();
+
 		return { post: findPost, user: findUser, like };
 	}
 
@@ -55,10 +62,6 @@ export class LikeResolver {
 				createdAt: "DESC",
 			},
 		});
-
-		const post = await Post.find({});
-
-		console.log(myLikes);
 
 		const user = await User.findOne({ id: payload?.userId });
 
@@ -78,6 +81,13 @@ export class LikeResolver {
 			},
 		});
 		if (!likedPost) throw new Error("You haven't liked the post.");
+
+		const findPost = await Post.findOne({ id: postId });
+		const newNumberOfLikes = findPost!.numberOfLikes - 1;
+		await Object.assign(findPost, {
+			...findPost,
+			numberOfLikes: newNumberOfLikes,
+		}).save();
 
 		await likedPost.remove();
 

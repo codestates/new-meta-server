@@ -1,5 +1,6 @@
-import { User } from "../../../entities/User";
 import { ObjectType, Field } from "type-graphql";
+
+import { User } from "../../../entities/User";
 
 @ObjectType()
 export class LogoutResponseType {

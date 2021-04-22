@@ -1,13 +1,12 @@
 import { Field, ObjectType } from "type-graphql";
-
-import { Post } from "../../../entities/Post";
 import { User } from "../../../entities/User";
+import { Follow } from "../../../entities/Follow";
 
 @ObjectType()
-export class FetchAllPostsResponseType {
-	@Field(() => [Post])
-	posts: Post;
-
+export class CreateFollowResponseType {
 	@Field(() => User)
 	user: User;
+
+	@Field()
+	message: string;
 }
