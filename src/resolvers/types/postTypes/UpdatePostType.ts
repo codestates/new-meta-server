@@ -28,29 +28,8 @@ export class UpdatePostInputType implements Partial<Post> {
 
 @ObjectType()
 export class UpdatePostResponseType {
-	@Field()
-	champion: string;
-
-	@Field()
-	title: string;
-
-	@Field()
-	description: string;
-
-	@Field()
-	skills: string;
-
-	@Field()
-	play: string;
-
-	@Field()
-	etc: string;
-
-	@Field()
-	updatedAt: Date;
-
-	@Field()
-	createdAt: Date;
+	@Field(() => Post)
+	post: Post;
 
 	@Field(() => User)
 	user: User;
