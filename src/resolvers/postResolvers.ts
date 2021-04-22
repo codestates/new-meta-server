@@ -112,6 +112,7 @@ export class CreatePostResolver {
 		const posts = await Post.find({
 			order: {
 				numberOfLikes: "DESC",
+				createdAt: "DESC",
 			},
 		});
 
