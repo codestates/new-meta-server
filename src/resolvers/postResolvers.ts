@@ -97,10 +97,21 @@ export class CreatePostResolver {
 	}
 
 	@Query(() => [Post], { nullable: true })
-	async fetchAllPosts() {
+	async fetchAllPostsOrderByCreatedAt() {
 		const posts = await Post.find({
 			order: {
 				createdAt: "DESC",
+			},
+		});
+
+		return posts;
+	}
+
+	@Query(() => [Post], { nullable: true })
+	async fetchAllPostsOrderByLikes() {
+		const posts = await Post.find({
+			order: {
+				numberOfLikes: "DESC",
 			},
 		});
 
