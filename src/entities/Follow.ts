@@ -23,22 +23,6 @@ export class Follow extends BaseEntity {
 	@CreateDateColumn()
 	createdAt: Date;
 
-	@Field()
-	@Column()
-	subjectNumber: string;
-
-	@Field()
-	@Column()
-	subjectEmail: string;
-
-	@Field()
-	@Column()
-	targetNumber: string;
-
-	@Field()
-	@Column()
-	targetEmail: string;
-
 	@Field(() => User)
 	@ManyToOne(() => User, (user) => user.subject, { nullable: true })
 	subject: User;

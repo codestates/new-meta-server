@@ -13,6 +13,7 @@ import { Follow } from "../entities/Follow";
 import { isAuth } from "./middleware/isAuth";
 import { MyContext } from "./types/MyContext";
 import { CreateFollowResponseType } from "./types/FollowTypes/CreateFollowResponseType";
+import { getRepository } from "typeorm";
 
 @Resolver()
 export class FollowResolver {
@@ -25,6 +26,9 @@ export class FollowResolver {
 		if (payload?.userId === targetId)
 			throw new Error("You can't follow yourself");
 
+		const findTargetUser = await User.findOne({ id: targetId });
+		if (!findTargetUser) throw new Error("User not found");
+
 		const check = await Follow.findOne({
 			where: {
 				subject: payload?.userId,
@@ -33,23 +37,16 @@ export class FollowResolver {
 		});
 		if (check) throw new Error("You already followed the user");
 
-		const findTargetUser = await User.findOne({ id: targetId });
-		if (!findTargetUser) throw new Error("User not found");
-
 		const subjectUser = await User.findOne({ id: payload?.userId });
 
 		const follow = await Follow.create({
 			subject: { id: payload?.userId },
-			subjectNumber: payload?.userId,
-			subjectEmail: payload?.userEmail,
 			target: { id: targetId },
-			targetNumber: targetId,
-			targetEmail: findTargetUser.email,
 		}).save();
 
 		return {
-			user: subjectUser,
-			message: `${payload?.userEmail} follows ${findTargetUser.email} now`,
+			subject: subjectUser,
+			target: findTargetUser,
 		};
 	}
 
@@ -75,16 +72,26 @@ export class FollowResolver {
 	@Query(() => [Follow])
 	@UseMiddleware(isAuth)
 	async readWhomIFollow(@Ctx() { payload }: MyContext) {
-		const follow = await Follow.find({ where: { subject: payload?.userId } });
+		const result = await getRepository(Follow)
+			.createQueryBuilder("follow")
+			.innerJoinAndSelect("follow.target", "user")
+			.where({ subject: payload?.userId })
+			.orderBy("follow.createdAt", "DESC")
+			.getMany();
 
-		return follow;
+		return result;
 	}
 
 	@Query(() => [Follow])
 	@UseMiddleware(isAuth)
 	async readWhoFollowsMe(@Ctx() { payload }: MyContext) {
-		const follow = await Follow.find({ where: { target: payload?.userId } });
+		const result = await getRepository(Follow)
+			.createQueryBuilder("follow")
+			.innerJoinAndSelect("follow.subject", "user")
+			.where({ target: payload?.userId })
+			.orderBy("follow.createdAt", "DESC")
+			.getMany();
 
-		return follow;
+		return result;
 	}
 }

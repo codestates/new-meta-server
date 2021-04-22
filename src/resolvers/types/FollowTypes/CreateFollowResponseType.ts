@@ -5,8 +5,8 @@ import { Follow } from "../../../entities/Follow";
 @ObjectType()
 export class CreateFollowResponseType {
 	@Field(() => User)
-	user: User;
+	subject: User;
 
-	@Field()
-	message: string;
+	@Field(() => User)
+	target: User;
 }

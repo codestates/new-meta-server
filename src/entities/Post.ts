@@ -52,10 +52,6 @@ export class Post extends BaseEntity {
 	@UpdateDateColumn()
 	updatedAt: Date;
 
-	@Field()
-	@Column()
-	author: string;
-
 	@Field({ defaultValue: 0 })
 	@Column({ default: 0 })
 	numberOfLikes: number;
