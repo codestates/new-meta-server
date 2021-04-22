@@ -1,5 +1,6 @@
 import { User } from "../../../entities/User";
 import { Post } from "../../../entities/Post";
+import { Like } from "../../../entities/Like";
 import { ObjectType, Field } from "type-graphql";
 
 @ObjectType()
@@ -9,4 +10,7 @@ export class MyinfoResponseType {
 
 	@Field(() => [Post], { nullable: true })
 	posts?: Post;
+
+	@Field(() => [Like], { nullable: true })
+	likes?: Like;
 }
