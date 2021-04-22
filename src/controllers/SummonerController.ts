@@ -6,6 +6,12 @@ import axios from "axios";
 dotenv.config();
 const API_KEY = process.env.API_KEY;
 
+function later(delay:number) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, delay)
+  })             
+}
+
 /* API Data */
 /* 클라이언트에서 사용자 소환사명을 request로 받은 경우 */
 class SummonerController {
@@ -222,7 +228,7 @@ class SummonerController {
               return summonerMatchStats;
             };
 
-            await setTimeout(() => {}, 2000);
+            await later(2000);
             const recentMatchData = await Promise.all(
               matchListArray.map((el: MatchInfo) => {
                 return axios.get(
@@ -404,8 +410,9 @@ class SummonerController {
 
             /* 코드 실행순서 : getMatchExp => 20경기의 구간별 totalGod, minionsKilled, jungleMinionsKilled, 합산 => 평균 내기 */
 
-            function getTimelineData() {
-              Promise.all(
+            async function getTimelineData() {
+              await later(2000)
+		Promise.all(
                 summonerAllData.recentChampionStats.map(
                   (el: PlayerMatchInfo) => {
                     return axios.get(
@@ -414,8 +421,9 @@ class SummonerController {
                   }
                 )
               )
-                .then((result) => {
-                  for (
+                .then(async(result) => {
+                  await later(1000);
+		  for (
                     let i = 0;
                     i < summonerAllData.recentChampionStats.length;
                     i++
