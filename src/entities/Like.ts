@@ -19,10 +19,6 @@ export class Like extends BaseEntity {
 	id: string;
 
 	@Field()
-	@Column()
-	postTitle: string;
-
-	@Field()
 	@CreateDateColumn()
 	createdAt: Date;
 

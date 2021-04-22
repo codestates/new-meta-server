@@ -24,6 +24,7 @@ import { LoginInputType, LoginResponseType } from "./types/UserTypes/LoginType";
 import { UpdatePasswordType } from "./types/UserTypes/UpdatePasswordType";
 import { LogoutResponseType } from "./types/UserTypes/LogoutType";
 import { MyinfoResponseType } from "./types/UserTypes/MyInfoType";
+import { getRepository } from 'typeorm';
 
 @Resolver()
 export class UserResolver {
@@ -81,7 +82,12 @@ export class UserResolver {
 	async myInfo(@Ctx() { payload }: MyContext) {
 		const user = await User.findOne({ id: payload?.userId });
 		const posts = await Post.find({ where: { user: payload?.userId } });
-		const likes = await Like.find({ where: { user: user }});
+		// const likes = await Like.find({ where: { user: user }});
+		const likes = await getRepository(Like)
+		.createQueryBuilder("like")
+		.leftJoinAndSelect("like.post", "post")
+		.where({user: payload?.userId,})
+		.getMany();
 
 		return { user, posts, likes };
 	}

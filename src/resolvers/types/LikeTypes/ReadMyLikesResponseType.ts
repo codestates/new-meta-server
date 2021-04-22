@@ -6,9 +6,6 @@ import { User } from "../../../entities/User";
 
 @ObjectType()
 export class ReadMyLikesResponseType {
-	@Field(() => [Post])
-	posts: Post;
-
 	@Field(() => User)
 	user: User;
 
