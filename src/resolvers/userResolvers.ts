@@ -11,6 +11,7 @@ import { sign } from "jsonwebtoken";
 
 import { User } from "../entities/User";
 import { Post } from "../entities/Post";
+import { Like } from "../entities/Like";
 import { generateToken } from "../lib/jwt";
 import { isAuth } from "./middleware/isAuth";
 
@@ -80,8 +81,9 @@ export class UserResolver {
 	async myInfo(@Ctx() { payload }: MyContext) {
 		const user = await User.findOne({ id: payload?.userId });
 		const posts = await Post.find({ where: { user: payload?.userId } });
+		const likes = await Like.find({ where: { user: user }});
 
-		return { user, posts };
+		return { user, posts, likes };
 	}
 
 	@Mutation(() => User, { nullable: true })
