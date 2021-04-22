@@ -56,8 +56,8 @@ export class Post extends BaseEntity {
 	@Column()
 	author: string;
 
-	@Field()
-	@Column()
+	@Field({ defaultValue: 0 })
+	@Column({ default: 0 })
 	numberOfLikes: number;
 
 	@Field(() => User)
