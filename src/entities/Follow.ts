@@ -24,10 +24,16 @@ export class Follow extends BaseEntity {
 	createdAt: Date;
 
 	@Field(() => User)
-	@ManyToOne(() => User, (user) => user.subject, { nullable: true })
+	@ManyToOne(() => User, (user) => user.subject, {
+		nullable: true,
+		onDelete: "CASCADE",
+	})
 	subject: User;
 
 	@Field(() => User)
-	@ManyToOne(() => User, (user) => user.target, { nullable: true })
+	@ManyToOne(() => User, (user) => user.target, {
+		nullable: true,
+		onDelete: "CASCADE",
+	})
 	target: User;
 }
