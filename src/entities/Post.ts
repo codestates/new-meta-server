@@ -57,10 +57,13 @@ export class Post extends BaseEntity {
 	numberOfLikes: number;
 
 	@Field(() => User)
-	@ManyToOne(() => User, (user) => user.posts, { nullable: true })
+	@ManyToOne(() => User, (user) => user.posts, {
+		nullable: true,
+		onDelete: "CASCADE",
+	})
 	user: User;
 
 	@Field(() => [Like], { nullable: true })
-	@OneToMany(() => Like, (like) => like.post)
+	@OneToMany(() => Like, (like) => like.post, { cascade: true })
 	likes: Like[];
 }

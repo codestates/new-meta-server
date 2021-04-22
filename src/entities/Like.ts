@@ -23,10 +23,16 @@ export class Like extends BaseEntity {
 	createdAt: Date;
 
 	@Field(() => User)
-	@ManyToOne(() => User, (user) => user.likes, { nullable: true })
+	@ManyToOne(() => User, (user) => user.likes, {
+		nullable: true,
+		onDelete: "CASCADE",
+	})
 	user: User;
 
 	@Field(() => Post)
-	@ManyToOne(() => Post, (post) => post.likes, { nullable: true })
+	@ManyToOne(() => Post, (post) => post.likes, {
+		nullable: true,
+		onDelete: "CASCADE",
+	})
 	post: Post;
 }
