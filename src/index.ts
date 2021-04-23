@@ -8,14 +8,10 @@ import { buildSchema } from "type-graphql";
 import { createConnection } from "typeorm";
 import cors from "cors";
 import { logger } from "./config/winston";
+import passport from "passport";
 import "dotenv/config";
 
 import routes from "./routes";
-// import {
-// 	githubCallback,
-// 	googleCallback,
-// 	facebookCallback,
-// } from "./controllers/callback";
 
 const main = async () => {
 	const app = express();
@@ -77,9 +73,19 @@ const main = async () => {
 	});
 
 	// oAuth
-	// app.post("/auth/github/callback", githubCallback);
-	// app.post("/auth/google/callback", googleCallback);
-	// app.post("/auth/facebook/callback", facebookCallback);
+	app.get(
+		"/auth/google",
+		passport.authenticate("google", { scope: ["profile"] })
+	);
+
+	app.get(
+		"/auth/google/callback",
+		passport.authenticate("google", { failureRedirect: "/login" }),
+		function (req, res) {
+			// Successful authentication, redirect home.
+			res.redirect("/");
+		}
+	);
 
 	app.use("/", routes);
 

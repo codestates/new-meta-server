@@ -64,7 +64,10 @@ export class UserResolver {
 		const valid = await compare(password, user.password!);
 		if (!valid) throw new Error("Check your password");
 
-		return { token: generateToken(user.id, user.email!, user.nickname), user };
+		return {
+			token: generateToken(user.id, user.email!, user.nickname as string),
+			user,
+		};
 	}
 
 	@Mutation(() => LogoutResponseType)
