@@ -7,9 +7,15 @@ import express from "express";
 import { buildSchema } from "type-graphql";
 import { createConnection } from "typeorm";
 import cors from "cors";
+import { logger } from "./config/winston";
 import "dotenv/config";
 
 import routes from "./routes";
+// import {
+// 	githubCallback,
+// 	googleCallback,
+// 	facebookCallback,
+// } from "./controllers/callback";
 
 const main = async () => {
 	const app = express();
@@ -60,6 +66,21 @@ const main = async () => {
 		})
 	);
 
+	// winston testing
+	app.get("/", (req, res) => {
+		logger.info("GET /");
+		res.send("testing...");
+	});
+	app.get("/error", (req, res) => {
+		logger.error("Error message");
+		res.sendStatus(500);
+	});
+
+	// oAuth
+	// app.post("/auth/github/callback", githubCallback);
+	// app.post("/auth/google/callback", googleCallback);
+	// app.post("/auth/facebook/callback", facebookCallback);
+
 	app.use("/", routes);
 
 	apolloServer.applyMiddleware({ app });
@@ -82,8 +103,10 @@ const main = async () => {
 
 		const credentials = { key: privateKey, cert: certificate };
 		server = https.createServer(credentials, app);
-		server.listen(PORT, () =>
-			console.log(`🚀 HTTPS Server is starting on ${PORT}/graphql`)
+		server.listen(
+			PORT,
+			() => logger.info(`🚀 HTTPS Server is starting on ${PORT}`)
+			// console.log(`🚀 HTTPS Server is starting on ${PORT}`)
 		);
 	} else {
 		server = app.listen(PORT);
