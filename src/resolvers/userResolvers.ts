@@ -114,6 +114,42 @@ export class UserResolver {
 		return { user, posts, likes, followings, followers };
 	}
 
+	@Query(() => MyinfoResponseType)
+	@UseMiddleware(isAuth)
+	async userInfo(@Arg("userId") userId: string) {
+		const user = await User.findOne({ id: userId });
+
+		const posts = await getRepository(Post)
+			.createQueryBuilder("post")
+			.leftJoinAndSelect("post.user", "user")
+			.where({ user: userId })
+			.orderBy("post.createdAt", "DESC")
+			.getMany();
+
+		const likes = await getRepository(Like)
+			.createQueryBuilder("like")
+			.leftJoinAndSelect("like.post", "post")
+			.where({ user: userId })
+			.orderBy("like.createdAt", "DESC")
+			.getMany();
+
+		const followings = await getRepository(Follow)
+			.createQueryBuilder("follow")
+			.innerJoinAndSelect("follow.target", "user")
+			.where({ subject: userId })
+			.orderBy("follow.createdAt", "DESC")
+			.getMany();
+
+		const followers = await getRepository(Follow)
+			.createQueryBuilder("follow")
+			.innerJoinAndSelect("follow.subject", "user")
+			.where({ target: userId })
+			.orderBy("follow.createdAt", "DESC")
+			.getMany();
+
+		return { user, posts, likes, followings, followers };
+	}
+
 	@Mutation(() => User, { nullable: true })
 	@UseMiddleware(isAuth)
 	async changePassword(
