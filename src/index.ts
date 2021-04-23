@@ -11,11 +11,11 @@ import { logger } from "./config/winston";
 import "dotenv/config";
 
 import routes from "./routes";
-import {
-	githubCallback,
-	googleCallback,
-	facebookCallback,
-} from "./controllers/callback";
+// import {
+// 	githubCallback,
+// 	googleCallback,
+// 	facebookCallback,
+// } from "./controllers/callback";
 
 const main = async () => {
 	const app = express();
@@ -77,9 +77,9 @@ const main = async () => {
 	});
 
 	// oAuth
-	app.post("/auth/github/callback", githubCallback);
-	app.post("/auth/google/callback", googleCallback);
-	app.post("/auth/facebook/callback", facebookCallback);
+	// app.post("/auth/github/callback", githubCallback);
+	// app.post("/auth/google/callback", googleCallback);
+	// app.post("/auth/facebook/callback", facebookCallback);
 
 	app.use("/", routes);
 
