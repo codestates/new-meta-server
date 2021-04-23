@@ -115,7 +115,6 @@ export class UserResolver {
 	}
 
 	@Query(() => MyinfoResponseType)
-	@UseMiddleware(isAuth)
 	async userInfo(@Arg("userId") userId: string) {
 		const user = await User.findOne({ id: userId });
 
