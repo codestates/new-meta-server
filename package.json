@@ -3,6 +3,7 @@
 	"version": "1.0.0",
 	"description": "## server",
 	"main": "app.js",
+	"type": "module",
 	"scripts": {
 		"build": "tsc",
 		"dev": "ts-node-dev --respawn src/index.ts"
