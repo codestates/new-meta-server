@@ -11,7 +11,7 @@ import {
 import { Post } from "./Post";
 import { Like } from "./Like";
 import { Follow } from "./Follow";
-import { OpenAuth } from "./OpenAuth";
+// import { OpenAuth } from "./OpenAuth";
 
 @ObjectType()
 @Entity()
@@ -33,8 +33,8 @@ export class User extends BaseEntity {
 	password?: string;
 
 	// open authentication
-	@OneToOne(() => OpenAuth, (openAuth) => openAuth.user)
-	openAuth?: OpenAuth;
+	// @OneToOne(() => OpenAuth, (openAuth) => openAuth.user)
+	// openAuth?: OpenAuth;
 
 	// relations among entities
 	@Field(() => [Post], { nullable: true })

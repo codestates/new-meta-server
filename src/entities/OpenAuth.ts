@@ -5,19 +5,18 @@
 // 	Entity,
 // 	PrimaryGeneratedColumn,
 // 	OneToOne,
-// 	JoinColumn,
 // } from "typeorm";
 
-// import { User } from "./User";
+// // import { User } from "../entities/User";
 
-// export enum socialProviderType {
+// export enum ProviderType {
 // 	GOOGLE = "google",
 // 	FACEBOOK = "facebook",
 // 	GITHUB = "github",
 // }
 
-// registerEnumType(socialProviderType, {
-// 	name: "socialProviderType",
+// registerEnumType(ProviderType, {
+// 	name: "ProviderType",
 // 	valuesConfig: {
 // 		GOOGLE: {
 // 			description: "Google OAuth 2.0",
@@ -26,7 +25,7 @@
 // 			description: "Facebook OAuth 2.0",
 // 		},
 // 		GITHUB: {
-// 			description: "Github OAUTH 2.0",
+// 			description: "Github OAuth 2.0",
 // 		},
 // 	},
 // });
@@ -34,23 +33,21 @@
 // @ObjectType()
 // @Entity()
 // export class OpenAuth extends BaseEntity {
-// 	@Field(() => String)
+// 	@Field()
 // 	@PrimaryGeneratedColumn("uuid")
-// 	id!: string;
+// 	id: string;
 
-// 	@Field(() => String)
-// 	@Column({ name: "provider_id" })
+// 	@Field()
+// 	@Column()
 // 	providerId: string;
 
-// 	@Field(() => socialProviderType)
+// 	@Field()
 // 	@Column({
-// 		name: "social_provider",
 // 		type: "enum",
-// 		enum: socialProviderType,
+// 		enum: ProviderType,
 // 	})
-// 	socialProvider!: socialProviderType;
+// 	provider: ProviderType;
 
-// 	@OneToOne(() => User, (user) => user.openAuth, { onDelete: "CASCADE" })
-// 	@JoinColumn({ name: "userId" })
-// 	user: User;
+// 	// @OneToOne(() => User, (user) => user.openAuth, { onDelete: "CASCADE" })
+// 	// user: User;
 // }
