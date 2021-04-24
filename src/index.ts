@@ -3,15 +3,16 @@ import fs from "fs";
 
 import "reflect-metadata";
 import { ApolloServer } from "apollo-server-express";
-import express from "express";
+import express, { Request, Response } from "express";
 import morgan from "morgan";
 import { buildSchema } from "type-graphql";
 import { createConnection } from "typeorm";
 import cors from "cors";
 import { logger } from "./config/winston";
 import passport from "./lib/passport";
-
 import "dotenv/config";
+
+import { generateToken } from "./lib/jwt";
 
 import routes from "./routes";
 
@@ -76,16 +77,30 @@ const main = async () => {
 	});
 
 	// oAuth
+
+	app.use(passport.initialize());
 	app.get(
 		"/auth/google",
-		passport.authenticate("google", { scope: ["profile"] })
+		passport.authenticate("google", {
+			scope: ["profile", "email"],
+			session: false,
+		})
 	);
 	app.get(
 		"/auth/google/callback",
-		passport.authenticate("google", { failureRedirect: "/login" }),
-		function (req, res) {
-			// Successful authentication, redirect home.
-			res.redirect("/");
+		passport.authenticate("google", {
+			failureRedirect: "/error",
+			session: false,
+		}),
+		function (req: Request, res: Response) {
+			const userData: any = req.user;
+			const { id, email, nickname } = userData;
+			console.log(userData);
+			const token = generateToken(id, email, nickname);
+
+			console.log("token", token);
+
+			res.redirect(`http://localhost:3000/?token=${token}`);
 		}
 	);
 
