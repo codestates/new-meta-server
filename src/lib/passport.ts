@@ -17,26 +17,24 @@ passport.use(
 			clientSecret: process.env.GOOGLE_SECRET as string,
 			callbackURL: "/auth/google/callback",
 		},
-		async (
-			accessToken: string,
-			refreshToken: string,
-			profile: any,
-			cb: any
-		) => {
+		(accessToken: string, refreshToken: string, profile: any, cb: any) => {
+			console.log("accessToken: ", accessToken);
+			console.log("refreshToken: ", refreshToken);
 			console.log("profile_google: ", profile);
+
 			const email = profile.email;
 			const nickname = profile.displayName;
 			const password = profile.id;
 			const accountType = "google";
 
 			// DB에 존재하는 email, accountType 모두 일치
-			const existingUser = await User.findOne({
+			const existingUser = User.findOne({
 				where: { email, accountType },
 			});
 			if (existingUser) return cb(null, existingUser);
 
 			// DB에 email 존재하지 않음.
-			const result = await User.create({
+			const result = User.create({
 				email,
 				nickname,
 				password,
@@ -123,3 +121,5 @@ passport.use(
 		}
 	)
 );
+
+export default passport;

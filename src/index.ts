@@ -4,11 +4,13 @@ import fs from "fs";
 import "reflect-metadata";
 import { ApolloServer } from "apollo-server-express";
 import express from "express";
+import morgan from "morgan";
 import { buildSchema } from "type-graphql";
 import { createConnection } from "typeorm";
 import cors from "cors";
 import { logger } from "./config/winston";
-import passport from "passport";
+import passport from "./lib/passport";
+
 import "dotenv/config";
 
 import routes from "./routes";
@@ -42,6 +44,7 @@ const main = async () => {
 		});
 	}
 
+	app.use(morgan("dev"));
 	app.use(express.json());
 	app.use(express.urlencoded({ extended: false }));
 
