@@ -21,14 +21,14 @@ export class User extends BaseEntity {
 	// local authentication
 	@Field()
 	@Column()
-	nickname?: string;
+	nickname: string;
 
-	@Field({ nullable: true })
-	@Column({ nullable: true, unique: true })
-	email?: string;
+	@Field()
+	@Column({ unique: true })
+	email: string;
 
-	@Column({ nullable: true })
-	password?: string;
+	@Column()
+	password: string;
 
 	@Column({ default: "local" })
 	accountType: string;
