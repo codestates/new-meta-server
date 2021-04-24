@@ -89,41 +89,58 @@ const main = async () => {
 	app.get(
 		"/auth/google/callback",
 		passport.authenticate("google", {
-			failureRedirect: "/error",
+			failureRedirect: "http://localhost:3000",
 			session: false,
 		}),
 		function (req: Request, res: Response) {
 			const userData: any = req.user;
 			const { id, email, nickname } = userData;
-			console.log(userData);
-			const token = generateToken(id, email, nickname);
 
-			console.log("token", token);
+			const token = generateToken(id, email, nickname);
 
 			res.redirect(`http://localhost:3000/?token=${token}`);
 		}
 	);
 
-	app.get("/auth/facebook", passport.authenticate("facebook"));
+	app.get(
+		"/auth/facebook",
+		passport.authenticate("facebook", {
+			session: false,
+		})
+	);
 	app.get(
 		"/auth/facebook/callback",
-		passport.authenticate("facebook", { failureRedirect: "/login" }),
+		passport.authenticate("facebook", {
+			failureRedirect: "http://localhost:3000",
+			session: false,
+		}),
 		function (req, res) {
-			// Successful authentication, redirect home.
-			res.redirect("/");
+			const userData: any = req.user;
+			const { id, email, nickname } = userData;
+
+			const token = generateToken(id, email, nickname);
+
+			res.redirect(`http://localhost:3000/?token=${token}`);
 		}
 	);
 
 	app.get(
 		"/auth/github",
-		passport.authenticate("github", { scope: ["user:email"] })
+		passport.authenticate("github", { scope: ["user:email"], session: false })
 	);
 	app.get(
 		"/auth/github/callback",
-		passport.authenticate("github", { failureRedirect: "/login" }),
+		passport.authenticate("github", {
+			failureRedirect: "http://localhost:3000",
+			session: false,
+		}),
 		function (req, res) {
-			// Successful authentication, redirect home.
-			res.redirect("/");
+			const userData: any = req.user;
+			const { id, email, nickname } = userData;
+
+			const token = generateToken(id, email, nickname);
+
+			res.redirect(`http://localhost:3000/?token=${token}`);
 		}
 	);
 

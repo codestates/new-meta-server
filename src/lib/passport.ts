@@ -2,7 +2,7 @@ import "dotenv/config";
 import passport from "passport";
 import * as passportGoogle from "passport-google-oauth20";
 import * as passportFacebook from "passport-facebook";
-import * as passportGithub from "passport-github2";
+import * as passportGithub from "passport-github";
 
 import { User } from "../entities/User";
 
@@ -64,8 +64,50 @@ passport.use(
 			clientID: process.env.FACEBOOK_ID as string,
 			clientSecret: process.env.FACEBOOK_SECRET as string,
 			callbackURL: "/auth/facebook/callback",
+			profileFields: ["id", "displayName", "email"],
 		},
-		(accessToken: string, refreshToken: string, profile: any, cb: any) => {}
+		async (
+			accessToken: string,
+			refreshToken: string,
+			profile: any,
+			cb: any
+		) => {
+			// 이미 가입된 이메일인지 체크
+			const existingUser = await User.findOne({
+				email: `${profile.id}@facebook.com`,
+			});
+			if (existingUser) {
+				const result = {
+					id: existingUser.id,
+					email: existingUser.id,
+					nickname: existingUser.nickname,
+					password: existingUser.password,
+					accountType: existingUser.accountType,
+				};
+				return cb(null, result);
+			} else {
+				const user = await User.create({
+					nickname: profile.displayName,
+					email: `${profile.id}@facebook.com`,
+					password: profile.id,
+					accountType: "facebook",
+				}).save();
+
+				const findOne = await User.findOne({
+					email: `${profile.id}@facebook.com`,
+				});
+
+				const result = {
+					id: findOne?.id,
+					email: findOne?.email,
+					nickname: findOne?.nickname,
+					password: findOne?.password,
+					accountType: findOne?.accountType,
+				};
+
+				return cb(null, result);
+			}
+		}
 	)
 );
 
@@ -76,7 +118,46 @@ passport.use(
 			clientSecret: process.env.GITHUB_SECRET as string,
 			callbackURL: "/auth/github/callback",
 		},
-		(accessToken: string, refreshToken: string, profile: any, cb: any) => {}
+		async (
+			accessToken: string,
+			refreshToken: string,
+			profile: any,
+			cb: any
+		) => {
+			// 이미 가입된 이메일인지 체크
+			const existingUser = await User.findOne({
+				email: `${profile.id}@github.com`,
+			});
+			if (existingUser) {
+				const result = {
+					id: existingUser.id,
+					email: existingUser.email,
+					nickname: existingUser.nickname,
+					password: existingUser.password,
+					accountType: existingUser.accountType,
+				};
+				return cb(null, result);
+			} else {
+				const user = await User.create({
+					nickname: profile.displayName,
+					email: `${profile.id}@github.com`,
+					password: profile.id,
+					accountType: "github",
+				}).save();
+
+				const findOne = await User.findOne({ email: profile._json.email });
+
+				const result = {
+					id: findOne?.id,
+					email: findOne?.email,
+					nickname: findOne?.nickname,
+					password: findOne?.password,
+					accountType: findOne?.accountType,
+				};
+
+				return cb(null, result);
+			}
+		}
 	)
 );
 
