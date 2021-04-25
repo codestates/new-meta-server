@@ -46,7 +46,14 @@ const main = async () => {
 	}
 
 	// 각종 미들웨어
-	app.use(morgan("dev"));
+	morgan.token("graphql-query", (req: any) => {
+		const { query, variables, operationName } = req.body;
+		return `GRAPHQL: \nOperation Name: ${operationName} \nQuery: ${query} \nVariables: ${JSON.stringify(
+			variables
+		)}`;
+	});
+	app.use(morgan(":graphql-query")); // GraphQL용 로거
+	app.use(morgan("common")); // RESTful API용 로거
 	app.use(express.json());
 	app.use(express.urlencoded({ extended: false }));
 	app.use(passport.initialize());
@@ -69,18 +76,10 @@ const main = async () => {
 		context: ({ req, res }: any) => ({ req, res }),
 	});
 
-	// winston testing
-	app.get("/", (req, res) => {
-		logger.info("GET /");
-		res.send("testing...");
-	});
-	app.get("/error", (req, res) => {
-		logger.error("Error message");
-		res.sendStatus(500);
-	});
-
+	// 라우트
 	app.use("/", routes);
 
+	// 아폴로서버 미들웨어
 	apolloServer.applyMiddleware({ app });
 
 	// 서버 구동

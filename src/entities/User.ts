@@ -30,6 +30,7 @@ export class User extends BaseEntity {
 	@Column()
 	password: string;
 
+	@Field()
 	@Column({ default: "local" })
 	accountType: string;
 
