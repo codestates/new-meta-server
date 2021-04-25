@@ -160,6 +160,8 @@ export class UserResolver {
 	) {
 		const user = await User.findOne({ id: payload?.userId });
 		if (!user) throw new Error("User not found");
+		if (user.accountType !== "local")
+			throw new Error("oAuth account's password can't be changed");
 
 		const valid = bcrypt.compare(currentPassword, user.password!);
 		if (!valid) throw new Error("Check your password");
@@ -177,14 +179,22 @@ export class UserResolver {
 		@Ctx() { payload }: MyContext
 	) {
 		const user = await User.findOne({ id: payload?.userId });
-		if (!user) return null;
+		if (!user) throw new Error("User not found");
 
-		const valid = await bcrypt.compare(password, user.password!);
-		if (!valid) return null;
+		if (user.accountType === "local") {
+			const valid = await bcrypt.compare(password, user.password!);
+			if (!valid) throw new Error("Check your password");
 
-		await user.remove();
+			await user.remove();
 
-		return true;
+			return true;
+		} else {
+			if (user.email !== password) throw new Error("Check your email");
+
+			await user.remove();
+
+			return true;
+		}
 	}
 
 	@Mutation(() => User)
