@@ -15,7 +15,7 @@ router.get(
 router.get(
 	"/google/callback",
 	passport.authenticate("google", {
-		failureRedirect: "http://localhost:3000",
+		failureRedirect: "https://new-meta.ga",
 		session: false,
 	}),
 	function (req: Request, res: Response) {
@@ -24,7 +24,7 @@ router.get(
 
 		const token = generateToken(id, email, nickname);
 
-		res.redirect(`http://localhost:3000/?token=${token}`);
+		res.redirect(`https://new-meta.ga/?token=${token}`);
 	}
 );
 
@@ -37,7 +37,7 @@ router.get(
 router.get(
 	"/facebook/callback",
 	passport.authenticate("facebook", {
-		failureRedirect: "http://localhost:3000",
+		failureRedirect: "https://new-meta.ga",
 		session: false,
 	}),
 	function (req, res) {
@@ -46,7 +46,7 @@ router.get(
 
 		const token = generateToken(id, email, nickname);
 
-		res.redirect(`http://localhost:3000/?token=${token}`);
+		res.redirect(`https://new-meta.ga/?token=${token}`);
 	}
 );
 
@@ -57,7 +57,7 @@ router.get(
 router.get(
 	"/github/callback",
 	passport.authenticate("github", {
-		failureRedirect: "http://localhost:3000",
+		failureRedirect: "https://new-meta.ga",
 		session: false,
 	}),
 	function (req, res) {
@@ -66,7 +66,7 @@ router.get(
 
 		const token = generateToken(id, email, nickname);
 
-		res.redirect(`http://localhost:3000/?token=${token}`);
+		res.redirect(`https://new-meta.ga/?token=${token}`);
 	}
 );
 
