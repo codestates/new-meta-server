@@ -144,7 +144,7 @@ passport.use(
 				// 우리 사이트는 이메일이 식별자이기 때문에 유저네임으로 가입한 경우 임의의 이메일을 만들어줘야 한다. -> example@newmeta.com
 				if (profile._json.email) {
 					const user = await User.create({
-						nickname: profile.displayName,
+						nickname: profile.username,
 						email: profile._json.email,
 						password: profile.id,
 						accountType: "github",
@@ -163,7 +163,7 @@ passport.use(
 					return cb(null, result);
 				} else {
 					const user = await User.create({
-						nickname: profile.displayName,
+						nickname: profile.username,
 						email: `${profile.username}@github.com`,
 						password: profile.id,
 						accountType: "github",
