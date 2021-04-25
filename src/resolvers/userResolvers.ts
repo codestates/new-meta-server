@@ -189,8 +189,6 @@ export class UserResolver {
 
 			return true;
 		} else {
-			if (user.email !== password) throw new Error("Check your email");
-
 			await user.remove();
 
 			return true;

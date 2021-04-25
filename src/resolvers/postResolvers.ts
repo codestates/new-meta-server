@@ -47,7 +47,6 @@ export class CreatePostResolver {
 	@Query(() => [Post])
 	@UseMiddleware(isAuth)
 	async readMyPosts(@Ctx() { payload }: MyContext) {
-		console.log(payload?.userId);
 		const posts = await Post.find({
 			where: {
 				user: payload?.userId,
