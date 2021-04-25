@@ -12,7 +12,6 @@ export const isAuth: MiddlewareFn<MyContext> = ({ context }, next) => {
 		const payload = verifyToken(token);
 		context.payload = payload as any;
 	} catch (err) {
-		console.log(err);
 		throw new Error("Please login again");
 	}
 	return next();
