@@ -3,22 +3,22 @@ import fs from "fs";
 
 import "reflect-metadata";
 import { ApolloServer } from "apollo-server-express";
-import express, { Request, Response } from "express";
-import morgan from "morgan";
-import { buildSchema } from "type-graphql";
+import express from "express";
 import { createConnection } from "typeorm";
+import { buildSchema } from "type-graphql";
+import "dotenv/config";
 import cors from "cors";
+import morgan from "morgan";
+
 import { logger } from "./config/winston";
 import passport from "./lib/passport";
-import "dotenv/config";
-
-import { generateToken } from "./lib/jwt";
 
 import routes from "./routes";
 
 const main = async () => {
 	const app = express();
 
+	// Database와 연결
 	if (process.env.NODE_ENV === "development") {
 		await createConnection({
 			type: "mysql",
@@ -45,19 +45,11 @@ const main = async () => {
 		});
 	}
 
+	// 각종 미들웨어
 	app.use(morgan("dev"));
 	app.use(express.json());
 	app.use(express.urlencoded({ extended: false }));
-
-	const schema = await buildSchema({
-		resolvers: [__dirname + "/resolvers/*.ts"],
-	});
-
-	const apolloServer = new ApolloServer({
-		schema,
-		context: ({ req, res }: any) => ({ req, res }),
-	});
-
+	app.use(passport.initialize());
 	app.use(
 		cors({
 			credentials: true,
@@ -65,6 +57,17 @@ const main = async () => {
 			methods: ["GET", "POST", "OPTIONS"],
 		})
 	);
+
+	// 스키마 설정
+	const schema = await buildSchema({
+		resolvers: [__dirname + "/resolvers/*.ts"],
+	});
+
+	// 아폴로 서버 구동
+	const apolloServer = new ApolloServer({
+		schema,
+		context: ({ req, res }: any) => ({ req, res }),
+	});
 
 	// winston testing
 	app.get("/", (req, res) => {
@@ -76,79 +79,11 @@ const main = async () => {
 		res.sendStatus(500);
 	});
 
-	// oAuth
-
-	app.use(passport.initialize());
-	app.get(
-		"/auth/google",
-		passport.authenticate("google", {
-			scope: ["profile", "email"],
-			session: false,
-		})
-	);
-	app.get(
-		"/auth/google/callback",
-		passport.authenticate("google", {
-			failureRedirect: "http://localhost:3000",
-			session: false,
-		}),
-		function (req: Request, res: Response) {
-			const userData: any = req.user;
-			const { id, email, nickname } = userData;
-
-			const token = generateToken(id, email, nickname);
-
-			res.redirect(`http://localhost:3000/?token=${token}`);
-		}
-	);
-
-	app.get(
-		"/auth/facebook",
-		passport.authenticate("facebook", {
-			session: false,
-		})
-	);
-	app.get(
-		"/auth/facebook/callback",
-		passport.authenticate("facebook", {
-			failureRedirect: "http://localhost:3000",
-			session: false,
-		}),
-		function (req, res) {
-			const userData: any = req.user;
-			const { id, email, nickname } = userData;
-
-			const token = generateToken(id, email, nickname);
-
-			res.redirect(`http://localhost:3000/?token=${token}`);
-		}
-	);
-
-	app.get(
-		"/auth/github",
-		passport.authenticate("github", { scope: ["user:email"], session: false })
-	);
-	app.get(
-		"/auth/github/callback",
-		passport.authenticate("github", {
-			failureRedirect: "http://localhost:3000",
-			session: false,
-		}),
-		function (req, res) {
-			const userData: any = req.user;
-			const { id, email, nickname } = userData;
-
-			const token = generateToken(id, email, nickname);
-
-			res.redirect(`http://localhost:3000/?token=${token}`);
-		}
-	);
-
 	app.use("/", routes);
 
 	apolloServer.applyMiddleware({ app });
 
-	// apolloServer.start();
+	// 서버 구동
 	const PORT = 4000;
 	let server;
 	if (
@@ -166,17 +101,13 @@ const main = async () => {
 
 		const credentials = { key: privateKey, cert: certificate };
 		server = https.createServer(credentials, app);
-		server.listen(
-			PORT,
-			() => logger.info(`🚀 HTTPS Server is starting on ${PORT}`)
-			// console.log(`🚀 HTTPS Server is starting on ${PORT}`)
+		server.listen(PORT, () =>
+			logger.info(`🚀 HTTPS Server is starting on ${PORT}`)
 		);
 	} else {
 		server = app.listen(PORT);
-		console.log(`🚀 HTTP Server is starting on ${PORT}/graphql`);
+		console.log(`🚀 HTTP Server is starting on ${PORT}`);
 	}
-
-	// app.listen(PORT, () => console.log(`Server is up on port ${PORT}/graphql`));
 };
 
 main();
